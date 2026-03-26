@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Key } from 'lucide-react';
+import { Users, Key, Sparkles } from 'lucide-react';
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -58,64 +58,98 @@ const LoginForm = ({ onToggleMode, isSignup }: LoginFormProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gold-muted to-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center font-serif">
-            Welcome to
-          </CardTitle>
-          <div className="text-center">
-            <span className="text-3xl font-serif text-foreground">
-              A<span className="text-gold-accent">u</span>thentic
-            </span>
-            <span className="text-lg text-muted-foreground ml-2">Tracker</span>
-          </div>
-          <p className="text-center text-muted-foreground text-sm">
-            Choose your preferred way to access your gold portfolio
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button 
-            onClick={handleGuestLogin} 
-            disabled={isLoading}
-            variant="outline"
-            className="w-full h-12 text-left justify-start"
-          >
-            <Users className="w-5 h-5 mr-3 text-muted-foreground" />
-            <div>
-              <div className="font-medium">Continue as Guest</div>
-              <div className="text-xs text-muted-foreground">Quick access without account</div>
-            </div>
-          </Button>
+    <div className="min-h-screen bg-luxury flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient gold glow effects */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gold/[0.04] rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-[300px] h-[300px] bg-gold/[0.03] rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[200px] h-[200px] bg-gold/[0.02] rounded-full blur-[80px] pointer-events-none" />
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">or</span>
-            </div>
-          </div>
+      <div className="w-full max-w-md relative animate-scale-in">
+        <Card className="glass-card-gold glow-gold overflow-hidden relative">
+          {/* Gold accent line at top */}
+          <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
 
-          <Button 
-            onClick={handleAuthentikLogin} 
-            disabled={isLoading}
-            className="w-full h-12 text-left justify-start bg-primary hover:bg-primary/90"
-          >
-            <Key className="w-5 h-5 mr-3" />
-            <div>
-              <div className="font-medium">Login with Authentik</div>
-              <div className="text-xs opacity-90">Secure OAuth authentication</div>
+          <CardHeader className="space-y-6 pt-10 pb-4 text-center">
+            {/* Logo / Icon */}
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gold/20 rounded-2xl blur-xl" />
+                <div className="relative p-4 rounded-2xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20">
+                  <Sparkles className="w-8 h-8 text-gold" />
+                </div>
+              </div>
             </div>
-          </Button>
 
-          {isLoading && (
-            <div className="text-center text-sm text-muted-foreground">
-              {isLoading ? 'Connecting...' : ''}
+            {/* Title */}
+            <div className="space-y-2">
+              <h1 className="text-3xl font-playfair font-bold">
+                <span className="text-gold-shimmer">Au</span>
+                <span className="text-foreground">thentic</span>
+                <span className="text-muted-foreground font-light ml-2 text-xl">Tracker</span>
+              </h1>
+              <p className="text-sm text-muted-foreground font-inter">
+                Your premium gold investment portfolio
+              </p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+
+          <CardContent className="space-y-4 pb-10 px-8">
+            {/* Guest Login */}
+            <Button
+              onClick={handleGuestLogin}
+              disabled={isLoading}
+              variant="outline"
+              className="w-full h-14 justify-start gap-4 border-gold/15 hover:border-gold/30 hover:bg-gold/5 transition-all duration-300 group"
+            >
+              <div className="p-2 rounded-lg bg-gold/10 group-hover:bg-gold/15 transition-colors">
+                <Users className="w-4 h-4 text-gold/70" />
+              </div>
+              <div className="text-left">
+                <div className="font-medium text-sm text-foreground">Continue as Guest</div>
+                <div className="text-xs text-muted-foreground">Quick access without an account</div>
+              </div>
+            </Button>
+
+            {/* Divider */}
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gold/10" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-card px-4 text-xs uppercase tracking-widest text-muted-foreground/50">or</span>
+              </div>
+            </div>
+
+            {/* Authentik Login */}
+            <Button
+              onClick={handleAuthentikLogin}
+              disabled={isLoading}
+              className="w-full h-14 justify-start gap-4 bg-gradient-to-r from-gold-dark via-gold to-gold-dark hover:from-gold hover:via-gold-light hover:to-gold text-background font-medium shadow-lg shadow-gold/20 hover:shadow-gold/30 transition-all duration-300 group"
+            >
+              <div className="p-2 rounded-lg bg-background/20 group-hover:bg-background/30 transition-colors">
+                <Key className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <div className="font-medium text-sm">Login with Authentik</div>
+                <div className="text-xs opacity-80">Secure OAuth authentication</div>
+              </div>
+            </Button>
+
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-gold/60 animate-pulse" />
+                <span className="text-xs text-muted-foreground">Connecting...</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Subtle branding */}
+        <p className="text-center text-xs text-muted-foreground/30 mt-6 font-inter">
+          Premium Gold Investment Analytics
+        </p>
+      </div>
     </div>
   );
 };

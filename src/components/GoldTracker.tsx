@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Plus, Trash2, TrendingUp, RefreshCw, Settings, Calendar, Target, ChevronUp, ChevronDown, ChevronsUpDown, Coins, Wallet, DollarSign, TrendingDown, BarChart3, IndianRupeeIcon } from "lucide-react";
+import { Plus, Trash2, TrendingUp, RefreshCw, Settings, Calendar, Target, ChevronUp, ChevronDown, ChevronsUpDown, Coins, Wallet, TrendingDown, BarChart3, IndianRupeeIcon, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { goldPurchaseApi, goldPriceApi } from "@/services/goldApi";
 import { GoldPurchase } from "@/types/gold";
 import { formatCurrency, formatWeight, formatPercentage, CurrencyFormat } from "@/utils/formatters";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Legend, Area, AreaChart } from "recharts";
 import { calculateGoldXIRR } from "@/utils/xirr";
 
 type SortField = 'date' | 'grams' | 'amountPaid' | 'pricePerGram' | 'currentValue' | 'return';
@@ -42,7 +42,7 @@ const GoldTracker = () => {
   const loadPurchases = async () => {
     setIsLoadingData(true);
     const result = await goldPurchaseApi.getAll();
-    
+
     if (result.success && result.data) {
       setPurchases(result.data);
       toast({
@@ -59,7 +59,7 @@ const GoldTracker = () => {
   const fetchCurrentGoldPrice = async () => {
     setIsLoadingPrice(true);
     const result = await goldPriceApi.getCurrentPrice();
-    
+
     if (result.success && result.data) {
       setCurrentGoldPrice(result.data);
       toast({
@@ -79,7 +79,7 @@ const GoldTracker = () => {
   const fetchLastMonthGoldPrice = async () => {
     setIsLoadingHistoricalPrice(true);
     const result = await goldPriceApi.getHistoricalPrice(30);
-    
+
     if (result.success && result.data) {
       setLastMonthGoldPrice(result.data);
       toast({
@@ -107,7 +107,7 @@ const GoldTracker = () => {
     }
 
     const grams = parseFloat(newPurchase.grams);
-    
+
     if (grams <= 0) {
       toast({
         title: "Invalid Values",
@@ -119,7 +119,7 @@ const GoldTracker = () => {
 
     // Fetch gold price for the selected date
     const priceResult = await goldPriceApi.getPriceAtDate(newPurchase.date);
-    
+
     if (!priceResult.success || !priceResult.data) {
       toast({
         title: "Price Fetch Failed",
@@ -141,7 +141,7 @@ const GoldTracker = () => {
 
     // Try to save to API first
     const result = await goldPurchaseApi.create(purchaseData);
-    
+
     let purchase: GoldPurchase;
     if (result.success && result.data) {
       purchase = result.data;
@@ -171,10 +171,10 @@ const GoldTracker = () => {
   const removePurchase = async (id: string) => {
     // Try to delete from API first
     const result = await goldPurchaseApi.delete(id);
-    
+
     // Update local state regardless of API result
     setPurchases(purchases.filter(p => p.id !== id));
-    
+
     if (result.success) {
       toast({
         title: "Purchase Removed",
@@ -295,92 +295,145 @@ const GoldTracker = () => {
     },
   };
 
+  const SortButton = ({ field, label }: { field: SortField; label: string }) => (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => handleSort(field)}
+      className="h-auto p-0 font-semibold hover:bg-transparent text-gold/70 hover:text-gold transition-colors"
+    >
+      {label}
+      {sortField === field ? (
+        sortDirection === 'asc' ? <ChevronUp className="ml-1 h-3.5 w-3.5" /> : <ChevronDown className="ml-1 h-3.5 w-3.5" />
+      ) : (
+        <ChevronsUpDown className="ml-1 h-3.5 w-3.5 opacity-40" />
+      )}
+    </Button>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gold-muted to-background p-4">
-      <div className="w-full mx-auto space-y-6">
+    <div className="min-h-screen bg-luxury p-4 md:p-6 lg:p-8">
+      {/* Ambient gold glow at top */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gold/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="w-full max-w-7xl mx-auto space-y-6 relative">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div className="text-center space-y-2 flex-1">
-            <h1 className="text-5xl font-playfair font-bold text-foreground">
-              <span className="text-gold font-semibold">Au</span>thentic Tracker
-            </h1>
-            <p className="text-muted-foreground font-inter text-lg font-light">Premium gold investment analytics & portfolio management</p>
-          </div>
-          
-          {/* Currency Format Selector */}
-          <Card className="w-64">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <Settings className="w-4 h-4 text-muted-foreground" />
-                <label className="text-sm font-medium text-muted-foreground">Display Format</label>
-                <Select value={currencyFormat} onValueChange={(value: CurrencyFormat) => setCurrencyFormat(value)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="thousands">Thousands (K)</SelectItem>
-                    <SelectItem value="lacs">Lacs (L)</SelectItem>
-                  </SelectContent>
-                </Select>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 animate-fade-in-up">
+          <div className="text-center md:text-left space-y-2 flex-1">
+            <div className="flex items-center gap-3 justify-center md:justify-start">
+              <div className="relative">
+                <Sparkles className="w-8 h-8 text-gold animate-pulse-gold" />
               </div>
-            </CardContent>
-          </Card>
+              <h1 className="text-4xl md:text-5xl font-playfair font-bold">
+                <span className="text-gold-shimmer">Au</span>
+                <span className="text-foreground">thentic Tracker</span>
+              </h1>
+            </div>
+            <p className="text-muted-foreground font-inter text-sm md:text-base font-light tracking-wide">
+              Premium gold investment analytics & portfolio management
+            </p>
+          </div>
+
+          {/* Currency Format Selector */}
+          <div className="glass-card rounded-xl px-4 py-3 flex items-center gap-3">
+            <Settings className="w-4 h-4 text-gold/60" />
+            <span className="text-xs font-medium text-muted-foreground hidden sm:inline">Display</span>
+            <Select value={currencyFormat} onValueChange={(value: CurrencyFormat) => setCurrencyFormat(value)}>
+              <SelectTrigger className="w-28 h-8 text-xs bg-transparent border-gold/20 focus:ring-gold/30">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-gold/20">
+                <SelectItem value="normal">Normal</SelectItem>
+                <SelectItem value="thousands">Thousands (K)</SelectItem>
+                <SelectItem value="lacs">Lacs (L)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-gold/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Coins className="w-4 h-4 text-gold" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Gold */}
+          <Card className="glass-card-gold gold-border-glow overflow-hidden relative group" style={{ animationDelay: '0ms' }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+            <CardHeader className="pb-2 relative">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <div className="p-1.5 rounded-lg bg-gold/10">
+                  <Coins className="w-3.5 h-3.5 text-gold" />
+                </div>
                 Total Gold
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gold">{formatWeight(totalGrams)}</div>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-gold-shimmer font-playfair">{formatWeight(totalGrams)}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {purchases.length} purchase{purchases.length !== 1 ? 's' : ''}
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="border-gold/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-primary" />
+          {/* Total Invested */}
+          <Card className="glass-card gold-border-glow overflow-hidden relative group" style={{ animationDelay: '100ms' }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+            <CardHeader className="pb-2 relative">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <div className="p-1.5 rounded-lg bg-gold/10">
+                  <Wallet className="w-3.5 h-3.5 text-gold/80" />
+                </div>
                 Total Invested
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totalInvested, currencyFormat)}</div>
+            <CardContent className="relative">
+              <div className="text-2xl font-bold text-foreground font-playfair">{formatCurrency(totalInvested, currencyFormat)}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Avg: {formatCurrency(averagePricePerGram, currencyFormat)}/g
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="border-gold/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <IndianRupeeIcon className="w-4 h-4 text-success" />
+          {/* Current Value */}
+          <Card className="glass-card gold-border-glow overflow-hidden relative group" style={{ animationDelay: '200ms' }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-success/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+            <CardHeader className="pb-2 relative">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <div className="p-1.5 rounded-lg bg-success/10">
+                  <IndianRupeeIcon className="w-3.5 h-3.5 text-success" />
+                </div>
                 Current Value
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">{formatCurrency(currentValue, currencyFormat)}</div>
+            <CardContent className="relative">
+              <div className="text-2xl font-bold text-gold font-playfair">{formatCurrency(currentValue, currencyFormat)}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                @ {formatCurrency(currentGoldPrice, currencyFormat)}/g
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="border-gold/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                {totalReturn >= 0 ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingDown className="w-4 h-4 text-destructive" />}
+          {/* Total Return */}
+          <Card className="glass-card gold-border-glow overflow-hidden relative group" style={{ animationDelay: '300ms' }}>
+            <div className={`absolute inset-0 bg-gradient-to-br ${totalReturn >= 0 ? 'from-success/5' : 'from-destructive/5'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+            <div className={`absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent ${totalReturn >= 0 ? 'via-success/40' : 'via-destructive/40'} to-transparent`} />
+            <CardHeader className="pb-2 relative">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <div className={`p-1.5 rounded-lg ${totalReturn >= 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
+                  {totalReturn >= 0 ? <TrendingUp className="w-3.5 h-3.5 text-success" /> : <TrendingDown className="w-3.5 h-3.5 text-destructive" />}
+                </div>
                 Total Return
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold flex items-center gap-1 ${totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
-                <TrendingUp className="w-5 h-5" />
+            <CardContent className="relative">
+              <div className={`text-2xl font-bold flex items-center gap-2 font-playfair ${totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(totalReturn, currencyFormat)}
-                <span className="text-sm">({formatPercentage(returnPercentage)})</span>
+                <span className={`text-sm font-inter font-medium px-2 py-0.5 rounded-full ${totalReturn >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
+                  {formatPercentage(returnPercentage)}
+                </span>
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                XIRR: {formatPercentage(totalXIRR)}
+                XIRR: <span className={totalXIRR >= 0 ? 'text-success' : 'text-destructive'}>{formatPercentage(totalXIRR)}</span>
               </div>
             </CardContent>
           </Card>
@@ -388,57 +441,69 @@ const GoldTracker = () => {
 
         {/* Advanced KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-primary/20">
+          <Card className="glass-card gold-border-glow overflow-hidden relative group">
+            <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <div className="p-1.5 rounded-lg bg-gold/10">
+                  <Calendar className="w-3.5 h-3.5 text-gold/80" />
+                </div>
                 30-Day Returns
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-xl font-bold flex items-center gap-1 ${monthlyReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
+              <div className={`text-xl font-bold flex items-center gap-2 font-playfair ${monthlyReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(monthlyReturn, currencyFormat)}
-                <span className="text-sm">({formatPercentage(monthlyReturnPercentage)})</span>
+                <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded-full ${monthlyReturn >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
+                  {formatPercentage(monthlyReturnPercentage)}
+                </span>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                XIRR: {formatPercentage(monthlyXIRR)}
+              <div className="text-xs text-muted-foreground mt-1.5">
+                XIRR: <span className={monthlyXIRR >= 0 ? 'text-success' : 'text-destructive'}>{formatPercentage(monthlyXIRR)}</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-primary/20">
+          <Card className="glass-card gold-border-glow overflow-hidden relative group">
+            <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Target className="w-4 h-4" />
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <div className="p-1.5 rounded-lg bg-gold/10">
+                  <Target className="w-3.5 h-3.5 text-gold/80" />
+                </div>
                 Since Last Investment
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-xl font-bold flex items-center gap-1 ${returnSinceLastInvestment >= 0 ? 'text-success' : 'text-destructive'}`}>
+              <div className={`text-xl font-bold flex items-center gap-2 font-playfair ${returnSinceLastInvestment >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(returnSinceLastInvestment * totalGrams, currencyFormat)}
-                <span className="text-sm">({formatPercentage(returnSinceLastInvestmentPercentage)})</span>
+                <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded-full ${returnSinceLastInvestment >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
+                  {formatPercentage(returnSinceLastInvestmentPercentage)}
+                </span>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {lastInvestmentDate && `Since ${lastInvestmentDate}`}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                XIRR: {formatPercentage(sinceLastInvestmentXIRR)}
+              <div className="text-xs text-muted-foreground mt-1.5">
+                {lastInvestmentDate && <span>Since {lastInvestmentDate}</span>}
+                {lastInvestmentDate && <span className="mx-1.5">|</span>}
+                XIRR: <span className={sinceLastInvestmentXIRR >= 0 ? 'text-success' : 'text-destructive'}>{formatPercentage(sinceLastInvestmentXIRR)}</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-primary/20">
+          <Card className="glass-card gold-border-glow overflow-hidden relative group">
+            <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-primary" />
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
+                <div className="p-1.5 rounded-lg bg-gold/10">
+                  <BarChart3 className="w-3.5 h-3.5 text-gold/80" />
+                </div>
                 Portfolio XIRR
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-xl font-bold ${totalXIRR >= 0 ? 'text-success' : 'text-destructive'}`}>
+              <div className={`text-3xl font-bold font-playfair ${totalXIRR >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatPercentage(totalXIRR)}
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-muted-foreground mt-1.5">
                 Annualized Return Rate
               </div>
             </CardContent>
@@ -447,68 +512,84 @@ const GoldTracker = () => {
 
         {/* Gold Price Inputs */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Gold Price</CardTitle>
+          <Card className="glass-card gold-border-glow overflow-hidden relative">
+            <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-playfair text-gold/90 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-gold animate-gold-pulse" />
+                Current Gold Price
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-4 items-end">
+              <div className="flex gap-3 items-end">
                 <div className="flex-1">
-                  <label className="text-sm font-medium text-muted-foreground">Price per gram (₹)</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={currentGoldPrice}
-                    onChange={(e) => setCurrentGoldPrice(parseFloat(e.target.value) || 0)}
-                    placeholder="Enter current gold price per gram"
-                    className="mt-1"
-                  />
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price per gram</label>
+                  <div className="relative mt-1.5">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={currentGoldPrice}
+                      onChange={(e) => setCurrentGoldPrice(parseFloat(e.target.value) || 0)}
+                      placeholder="Enter current gold price per gram"
+                      className="pl-7 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20 transition-all"
+                    />
+                  </div>
                 </div>
-                <Button 
-                  onClick={fetchCurrentGoldPrice} 
+                <Button
+                  onClick={fetchCurrentGoldPrice}
                   disabled={isLoadingPrice}
                   variant="outline"
                   size="sm"
+                  className="border-gold/20 hover:bg-gold/10 hover:border-gold/30 text-gold/80 hover:text-gold transition-all"
                 >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingPrice ? 'animate-spin' : ''}`} />
-                  {isLoadingPrice ? 'Fetching...' : 'Fetch Price'}
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isLoadingPrice ? 'animate-spin' : ''}`} />
+                  {isLoadingPrice ? 'Fetching...' : 'Fetch'}
                 </Button>
               </div>
-              <div className="text-sm text-muted-foreground mt-2">
-                Your average: {formatCurrency(averagePricePerGram, currencyFormat)}/g
+              <div className="text-xs text-muted-foreground mt-2.5 flex items-center gap-1">
+                Your average: <span className="text-gold/70 font-medium">{formatCurrency(averagePricePerGram, currencyFormat)}/g</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>30-Day Old Gold Price</CardTitle>
+          <Card className="glass-card gold-border-glow overflow-hidden relative">
+            <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-playfair text-gold/90 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-gold/50" />
+                30-Day Historical Price
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-4 items-end">
+              <div className="flex gap-3 items-end">
                 <div className="flex-1">
-                  <label className="text-sm font-medium text-muted-foreground">Price per gram (₹)</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={lastMonthGoldPrice}
-                    onChange={(e) => setLastMonthGoldPrice(parseFloat(e.target.value) || 0)}
-                    placeholder="Enter gold price from 30 days ago"
-                    className="mt-1"
-                  />
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price per gram</label>
+                  <div className="relative mt-1.5">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={lastMonthGoldPrice}
+                      onChange={(e) => setLastMonthGoldPrice(parseFloat(e.target.value) || 0)}
+                      placeholder="Enter gold price from 30 days ago"
+                      className="pl-7 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20 transition-all"
+                    />
+                  </div>
                 </div>
-                <Button 
-                  onClick={fetchLastMonthGoldPrice} 
+                <Button
+                  onClick={fetchLastMonthGoldPrice}
                   disabled={isLoadingHistoricalPrice}
                   variant="outline"
                   size="sm"
+                  className="border-gold/20 hover:bg-gold/10 hover:border-gold/30 text-gold/80 hover:text-gold transition-all"
                 >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${isLoadingHistoricalPrice ? 'animate-spin' : ''}`} />
-                  {isLoadingHistoricalPrice ? 'Fetching...' : 'Fetch Historical'}
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isLoadingHistoricalPrice ? 'animate-spin' : ''}`} />
+                  {isLoadingHistoricalPrice ? 'Fetching...' : 'Fetch'}
                 </Button>
               </div>
-              <div className="text-sm text-muted-foreground mt-2">
-                For 30-day return calculation
+              <div className="text-xs text-muted-foreground mt-2.5">
+                Used for 30-day return calculations
               </div>
             </CardContent>
           </Card>
@@ -517,22 +598,41 @@ const GoldTracker = () => {
         {/* Charts */}
         {chartData.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card className="w-full">
-              <CardHeader>
-                <CardTitle>Investment vs Value</CardTitle>
+            <Card className="glass-card gold-border-glow overflow-hidden relative">
+              <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-playfair text-gold/90">Investment vs Value</CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[400px] w-full">
+                <ChartContainer config={chartConfig} className="h-[350px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
-                      <XAxis 
-                        dataKey="date" 
-                        tickFormatter={(value) => new Date(value).toLocaleDateString()}
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="investedGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
                       />
-                      <YAxis 
+                      <YAxis
                         tickFormatter={(value) => formatCurrency(value, currencyFormat)}
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
                       />
-                      <ChartTooltip 
+                      <ChartTooltip
                         content={<ChartTooltipContent />}
                         labelFormatter={(value) => new Date(value).toLocaleDateString()}
                         formatter={(value: number, name: string) => [
@@ -540,45 +640,66 @@ const GoldTracker = () => {
                           name === "invested" ? "Total Invested" : "Investment + Returns"
                         ]}
                       />
-                      <Legend />
-                      <Line
+                      <Legend
+                        wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
+                      />
+                      <Area
                         type="monotone"
                         dataKey="invested"
-                        stroke="var(--color-invested)"
-                        strokeWidth={3}
-                        dot={{ fill: "var(--color-invested)" }}
+                        stroke="hsl(var(--chart-1))"
+                        strokeWidth={2}
+                        fill="url(#investedGradient)"
+                        dot={{ fill: "hsl(var(--chart-1))", strokeWidth: 0, r: 3 }}
+                        activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }}
                         name="Total Invested"
                       />
-                      <Line
+                      <Area
                         type="monotone"
                         dataKey="value"
-                        stroke="var(--color-returns)"
-                        strokeWidth={3}
-                        dot={{ fill: "var(--color-returns)" }}
+                        stroke="hsl(var(--chart-2))"
+                        strokeWidth={2}
+                        fill="url(#valueGradient)"
+                        dot={{ fill: "hsl(var(--chart-2))", strokeWidth: 0, r: 3 }}
+                        activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }}
                         name="Investment + Returns"
                       />
-                    </LineChart>
+                    </AreaChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </CardContent>
             </Card>
 
-            <Card className="w-full">
-              <CardHeader>
-                <CardTitle>Returns Over Time</CardTitle>
+            <Card className="glass-card gold-border-glow overflow-hidden relative">
+              <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-playfair text-gold/90">Returns Over Time</CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[400px] w-full">
+                <ChartContainer config={chartConfig} className="h-[350px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
-                      <XAxis 
-                        dataKey="date" 
-                        tickFormatter={(value) => new Date(value).toLocaleDateString()}
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="returnsGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.4} />
+                          <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
                       />
-                      <YAxis 
+                      <YAxis
                         tickFormatter={(value) => formatCurrency(value, currencyFormat)}
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
                       />
-                      <ChartTooltip 
+                      <ChartTooltip
                         content={<ChartTooltipContent />}
                         labelFormatter={(value) => new Date(value).toLocaleDateString()}
                         formatter={(value: number) => [
@@ -586,16 +707,20 @@ const GoldTracker = () => {
                           "Total Returns"
                         ]}
                       />
-                      <Legend />
-                      <Line
+                      <Legend
+                        wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
+                      />
+                      <Area
                         type="monotone"
                         dataKey="returns"
-                        stroke="var(--color-returns)"
-                        strokeWidth={3}
-                        dot={{ fill: "var(--color-returns)" }}
+                        stroke="hsl(var(--chart-2))"
+                        strokeWidth={2}
+                        fill="url(#returnsGradient)"
+                        dot={{ fill: "hsl(var(--chart-2))", strokeWidth: 0, r: 3 }}
+                        activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }}
                         name="Total Returns"
                       />
-                    </LineChart>
+                    </AreaChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </CardContent>
@@ -604,34 +729,41 @@ const GoldTracker = () => {
         )}
 
         {/* Add New Purchase */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Add New Purchase</CardTitle>
+        <Card className="glass-card-gold gold-border-glow overflow-hidden relative glow-gold-sm">
+          <div className="absolute top-0 left-[5%] right-[5%] h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-playfair text-gold flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add New Purchase
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Grams</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Grams</label>
                 <Input
                   type="number"
                   step="0.01"
                   value={newPurchase.grams}
                   onChange={(e) => setNewPurchase({...newPurchase, grams: e.target.value})}
                   placeholder="0.00"
-                  className="mt-1"
+                  className="mt-1.5 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20 transition-all"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Date</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</label>
                 <Input
                   type="date"
                   value={newPurchase.date}
                   onChange={(e) => setNewPurchase({...newPurchase, date: e.target.value})}
-                  className="mt-1"
+                  className="mt-1.5 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20 transition-all"
                 />
               </div>
               <div className="flex items-end">
-                <Button onClick={addPurchase} className="w-full">
+                <Button
+                  onClick={addPurchase}
+                  className="w-full bg-gradient-to-r from-gold-dark via-gold to-gold-dark hover:from-gold hover:via-gold-light hover:to-gold text-background font-semibold shadow-lg shadow-gold/20 hover:shadow-gold/30 transition-all duration-300"
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Purchase
                 </Button>
@@ -641,147 +773,97 @@ const GoldTracker = () => {
         </Card>
 
         {/* Purchases Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Purchase History</CardTitle>
+        <Card className="glass-card gold-border-glow overflow-hidden relative">
+          <div className="absolute top-0 left-[5%] right-[5%] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-playfair text-gold/90">Purchase History</CardTitle>
+              {purchases.length > 0 && (
+                <span className="text-xs text-muted-foreground font-inter">
+                  {purchases.length} record{purchases.length !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoadingData ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Loading purchases...
+              <div className="text-center py-12">
+                <div className="inline-flex items-center gap-3 text-muted-foreground">
+                  <RefreshCw className="w-5 h-5 animate-spin text-gold/50" />
+                  <span className="text-sm">Loading your portfolio...</span>
+                </div>
               </div>
             ) : purchases.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No purchases recorded yet. Add your first gold purchase above!
+              <div className="text-center py-16">
+                <div className="inline-flex flex-col items-center gap-3">
+                  <div className="p-4 rounded-2xl bg-gold/5 border border-gold/10">
+                    <Coins className="w-8 h-8 text-gold/40" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">No purchases recorded yet</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">Add your first gold purchase above to get started</p>
+                  </div>
+                </div>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleSort('date')}
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                      >
-                        Date
-                        {sortField === 'date' ? (
-                          sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronsUpDown className="ml-1 h-4 w-4 opacity-50" />
-                        )}
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleSort('grams')}
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                      >
-                        Grams
-                        {sortField === 'grams' ? (
-                          sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronsUpDown className="ml-1 h-4 w-4 opacity-50" />
-                        )}
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleSort('amountPaid')}
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                      >
-                        Amount Paid
-                        {sortField === 'amountPaid' ? (
-                          sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronsUpDown className="ml-1 h-4 w-4 opacity-50" />
-                        )}
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleSort('pricePerGram')}
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                      >
-                        Price/Gram
-                        {sortField === 'pricePerGram' ? (
-                          sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronsUpDown className="ml-1 h-4 w-4 opacity-50" />
-                        )}
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleSort('currentValue')}
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                      >
-                        Current Value
-                        {sortField === 'currentValue' ? (
-                          sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronsUpDown className="ml-1 h-4 w-4 opacity-50" />
-                        )}
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleSort('return')}
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                      >
-                        Return
-                        {sortField === 'return' ? (
-                          sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronsUpDown className="ml-1 h-4 w-4 opacity-50" />
-                        )}
-                      </Button>
-                    </TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedPurchases.map((purchase) => {
-                    const currentValue = purchase.grams * currentGoldPrice;
-                    const returnAmount = currentValue - purchase.amountPaid;
-                    const returnPercent = purchase.amountPaid > 0 ? (returnAmount / purchase.amountPaid) * 100 : 0;
-                    
-                    return (
-                      <TableRow key={purchase.id}>
-                        <TableCell>{purchase.date}</TableCell>
-                        <TableCell className="font-medium">{formatWeight(purchase.grams)}</TableCell>
-                        <TableCell>{formatCurrency(purchase.amountPaid, currencyFormat)}</TableCell>
-                        <TableCell>{formatCurrency(purchase.pricePerGram, currencyFormat)}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(currentValue, currencyFormat)}</TableCell>
-                        <TableCell className={returnAmount >= 0 ? 'text-success' : 'text-destructive'}>
-                          {formatCurrency(returnAmount, currencyFormat)} ({formatPercentage(returnPercent)})
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removePurchase(purchase.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
+              <div className="overflow-x-auto -mx-6">
+                <div className="min-w-[700px] px-6">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-gold/10 hover:bg-transparent">
+                        <TableHead><SortButton field="date" label="Date" /></TableHead>
+                        <TableHead><SortButton field="grams" label="Grams" /></TableHead>
+                        <TableHead><SortButton field="amountPaid" label="Amount Paid" /></TableHead>
+                        <TableHead><SortButton field="pricePerGram" label="Price/Gram" /></TableHead>
+                        <TableHead><SortButton field="currentValue" label="Current Value" /></TableHead>
+                        <TableHead><SortButton field="return" label="Return" /></TableHead>
+                        <TableHead className="w-10"></TableHead>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedPurchases.map((purchase, index) => {
+                        const currentValue = purchase.grams * currentGoldPrice;
+                        const returnAmount = currentValue - purchase.amountPaid;
+                        const returnPercent = purchase.amountPaid > 0 ? (returnAmount / purchase.amountPaid) * 100 : 0;
+
+                        return (
+                          <TableRow
+                            key={purchase.id}
+                            className="border-gold/5 hover:bg-gold/[0.03] transition-colors duration-200 group/row"
+                          >
+                            <TableCell className="text-sm text-muted-foreground">
+                              {new Date(purchase.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </TableCell>
+                            <TableCell className="font-medium text-gold/90">{formatWeight(purchase.grams)}</TableCell>
+                            <TableCell className="text-sm">{formatCurrency(purchase.amountPaid, currencyFormat)}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{formatCurrency(purchase.pricePerGram, currencyFormat)}</TableCell>
+                            <TableCell className="font-medium text-sm">{formatCurrency(currentValue, currencyFormat)}</TableCell>
+                            <TableCell>
+                              <div className={`flex items-center gap-1.5 text-sm font-medium ${returnAmount >= 0 ? 'text-success' : 'text-destructive'}`}>
+                                {returnAmount >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                {formatCurrency(returnAmount, currencyFormat)}
+                                <span className={`text-xs px-1.5 py-0.5 rounded-md ${returnAmount >= 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
+                                  {formatPercentage(returnPercent)}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removePurchase(purchase.id)}
+                                className="opacity-0 group-hover/row:opacity-100 transition-opacity text-destructive/60 hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
