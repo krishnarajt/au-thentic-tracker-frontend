@@ -10,6 +10,22 @@ const getUserId = () => {
   return user ? JSON.parse(user).id : null;
 };
 
+const isGuest = () => {
+  const userId = getUserId();
+  return userId && userId.startsWith('guest_');
+};
+
+const GUEST_PURCHASES_KEY = 'guest_gold_purchases';
+
+const getGuestPurchases = (): GoldPurchase[] => {
+  const data = localStorage.getItem(GUEST_PURCHASES_KEY);
+  return data ? JSON.parse(data) : [];
+};
+
+const saveGuestPurchases = (purchases: GoldPurchase[]) => {
+  localStorage.setItem(GUEST_PURCHASES_KEY, JSON.stringify(purchases));
+};
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -20,6 +36,9 @@ export interface ApiResponse<T> {
 export const goldPurchaseApi = {
   // Get all purchases for a user
   getAll: async (): Promise<ApiResponse<GoldPurchase[]>> => {
+    if (isGuest()) {
+      return { success: true, data: getGuestPurchases() };
+    }
     try {
       const userId = getUserId();
       const url = userId ? `${API_BASE_URL}/gold-purchases?userId=${userId}` : `${API_BASE_URL}/gold-purchases`;
@@ -46,12 +65,19 @@ export const goldPurchaseApi = {
 
   // Create new purchase
   create: async (purchase: Omit<GoldPurchase, 'id'>): Promise<ApiResponse<GoldPurchase>> => {
+    if (isGuest()) {
+      const newPurchase: GoldPurchase = { id: Date.now().toString(), ...purchase };
+      const purchases = getGuestPurchases();
+      purchases.push(newPurchase);
+      saveGuestPurchases(purchases);
+      return { success: true, data: newPurchase };
+    }
     try {
       const userId = getUserId();
       const purchaseWithUser = userId ? { ...purchase, userId } : purchase;
 
       const response = await fetch(`${API_BASE_URL}/gold-purchases`, {
-        method: 'POST', 
+        method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -73,6 +99,14 @@ export const goldPurchaseApi = {
 
   // Update purchase
   update: async (id: string, purchase: Partial<GoldPurchase>): Promise<ApiResponse<GoldPurchase>> => {
+    if (isGuest()) {
+      const purchases = getGuestPurchases();
+      const index = purchases.findIndex(p => p.id === id);
+      if (index === -1) return { success: false, error: 'Purchase not found' };
+      purchases[index] = { ...purchases[index], ...purchase };
+      saveGuestPurchases(purchases);
+      return { success: true, data: purchases[index] };
+    }
     try {
       const userId = getUserId();
       const purchaseWithUser = userId ? { ...purchase, userId } : purchase;
@@ -100,6 +134,11 @@ export const goldPurchaseApi = {
 
   // Delete purchase
   delete: async (id: string): Promise<ApiResponse<void>> => {
+    if (isGuest()) {
+      const purchases = getGuestPurchases().filter(p => p.id !== id);
+      saveGuestPurchases(purchases);
+      return { success: true };
+    }
     try {
       const response = await fetch(`${API_BASE_URL}/gold-purchases/${id}`, {
         method: 'DELETE',

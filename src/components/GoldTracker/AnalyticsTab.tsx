@@ -72,7 +72,7 @@ const AnalyticsTab = ({
             <Calendar className="w-4 h-4 text-gold/80" />
             Purchase Activity
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">Gold purchases in the last 12 months</p>
+          <p className="text-xs text-muted-foreground mt-1">Gold purchase activity</p>
         </CardHeader>
         <CardContent>
           <PurchaseCalendar purchases={purchases} />
