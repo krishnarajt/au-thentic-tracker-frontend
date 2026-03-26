@@ -125,24 +125,20 @@ export const goldPurchaseApi = {
 export const goldPriceApi = {
   getCurrentPrice: async (): Promise<ApiResponse<number>> => {
     try {
-      // Try your custom API first
-      try {
-        const response = await fetch(`${API_BASE_URL}/gold-price`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
+      const response = await fetch(`${API_BASE_URL}/gold-price`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
 
-        if (response.ok) {
-          const data = await response.json();
-          return { success: true, data: data.pricePerGram };
-        }
-      } catch (error) {
-        console.warn('Custom gold price API failed, trying fallback:', error);
+      if (response.ok) {
+        const data = await response.json();
+        return { success: true, data: data.pricePerGram };
       }
 
+      return { success: false, error: `HTTP error! status: ${response.status}` };
     } catch (error) {
       console.warn('Failed to fetch gold price from API:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };

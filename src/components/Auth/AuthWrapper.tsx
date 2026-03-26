@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import LoginForm from './LoginForm';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ interface AuthWrapperProps {
 
 const AuthWrapper = ({ children }: AuthWrapperProps) => {
   const { user, logout, isLoading } = useAuth();
-  const [isSignup, setIsSignup] = useState(false);
 
   if (isLoading) {
     return (
@@ -29,12 +27,7 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
   }
 
   if (!user) {
-    return (
-      <LoginForm
-        onToggleMode={() => setIsSignup(!isSignup)}
-        isSignup={isSignup}
-      />
-    );
+    return <LoginForm />;
   }
 
   return (

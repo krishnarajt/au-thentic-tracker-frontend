@@ -1,25 +1,15 @@
-export type CurrencyFormat = 'normal' | 'thousands' | 'lacs';
+export const formatCurrency = (amount: number): string => {
+  const sign = amount < 0 ? '-' : '';
+  const abs = Math.abs(amount);
 
-export const formatCurrency = (amount: number, format: CurrencyFormat): string => {
-  switch (format) {
-    case 'thousands':
-      if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-      }
-      return `₹${amount.toFixed(2)}`;
-    
-    case 'lacs':
-      if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(2)}L`;
-      } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-      }
-      return `₹${amount.toFixed(2)}`;
-    
-    case 'normal':
-    default:
-      return `₹${amount.toFixed(2)}`;
+  if (abs >= 10000000) {
+    return `${sign}₹${(abs / 10000000).toFixed(2)}Cr`;
+  } else if (abs >= 100000) {
+    return `${sign}₹${(abs / 100000).toFixed(2)}L`;
+  } else if (abs >= 1000) {
+    return `${sign}₹${(abs / 1000).toFixed(1)}K`;
   }
+  return `${sign}₹${abs.toFixed(2)}`;
 };
 
 export const formatWeight = (grams: number): string => {

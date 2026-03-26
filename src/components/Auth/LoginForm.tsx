@@ -5,12 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Key, Sparkles } from 'lucide-react';
 
-interface LoginFormProps {
-  onToggleMode: () => void;
-  isSignup: boolean;
-}
-
-const LoginForm = ({ onToggleMode, isSignup }: LoginFormProps) => {
+const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { loginAsGuest, loginWithAuthentik } = useAuth();
   const { toast } = useToast();

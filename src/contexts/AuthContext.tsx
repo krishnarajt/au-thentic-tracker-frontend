@@ -25,19 +25,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const checkAuthStatus = async () => {
-      // Check for stored session on app load
       const storedUser = localStorage.getItem('auth_user');
-      
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+      const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+
+      // Guest users don't need server validation
+      if (parsedUser && parsedUser.id.startsWith('guest_')) {
+        setUser(parsedUser);
         setIsLoading(false);
         return;
       }
 
-      // Check if user is authenticated via middleware
+      // Validate session with server for non-guest users (or no stored user)
       try {
         const response = await fetch(`${AUTH_API_BASE}/whoami/me`, {
-          credentials: 'include', // Include cookies for session
+          credentials: 'include',
         });
 
         if (response.ok) {
@@ -46,12 +47,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             id: data.sub,
             username: data.name,
           };
-          
+
           setUser(userData);
           localStorage.setItem('auth_user', JSON.stringify(userData));
+        } else {
+          // Server says not authenticated — clear stale local data
+          localStorage.removeItem('auth_user');
         }
       } catch (error) {
-        console.log('Not authenticated');
+        // Network error — trust stored guest user, clear OAuth users
+        if (parsedUser && parsedUser.id.startsWith('guest_')) {
+          setUser(parsedUser);
+        } else {
+          localStorage.removeItem('auth_user');
+        }
+        console.log('Auth check failed:', error);
       }
 
       setIsLoading(false);
@@ -62,11 +72,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const loginAsGuest = async (): Promise<boolean> => {
     try {
-      const userData = { 
-        id: 'guest_' + Date.now(), 
-        username: 'Guest User' 
+      // Reuse existing guest ID if available, so data persists across sessions
+      const storedUser = localStorage.getItem('auth_user');
+      const parsed = storedUser ? JSON.parse(storedUser) : null;
+      const guestId = (parsed && parsed.id.startsWith('guest_')) ? parsed.id : 'guest_' + Date.now();
+
+      const userData = {
+        id: guestId,
+        username: 'Guest User'
       };
-      
+
       setUser(userData);
       localStorage.setItem('auth_user', JSON.stringify(userData));
       return true;
@@ -87,9 +102,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const wasOAuthUser = user && !user.id.startsWith('guest_');
+
     setUser(null);
     localStorage.removeItem('auth_user');
+
+    // Invalidate server session for OAuth users
+    if (wasOAuthUser) {
+      try {
+        await fetch(`${AUTH_API_BASE}/auth/logout`, {
+          credentials: 'include',
+        });
+      } catch (error) {
+        console.warn('Server logout failed:', error);
+      }
+    }
   };
 
   return (

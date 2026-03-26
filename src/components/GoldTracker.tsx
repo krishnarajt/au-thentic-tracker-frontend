@@ -3,13 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Plus, Trash2, TrendingUp, RefreshCw, Settings, Calendar, Target, ChevronUp, ChevronDown, ChevronsUpDown, Coins, Wallet, TrendingDown, BarChart3, IndianRupeeIcon, Sparkles } from "lucide-react";
+import { Plus, Trash2, TrendingUp, RefreshCw, Calendar, Target, ChevronUp, ChevronDown, ChevronsUpDown, Coins, Wallet, TrendingDown, BarChart3, IndianRupeeIcon, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { goldPurchaseApi, goldPriceApi } from "@/services/goldApi";
 import { GoldPurchase } from "@/types/gold";
-import { formatCurrency, formatWeight, formatPercentage, CurrencyFormat } from "@/utils/formatters";
+import { formatCurrency, formatWeight, formatPercentage } from "@/utils/formatters";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Legend, Area, AreaChart } from "recharts";
 import { calculateGoldXIRR } from "@/utils/xirr";
 
@@ -20,7 +19,6 @@ const GoldTracker = () => {
   const [purchases, setPurchases] = useState<GoldPurchase[]>([]);
   const [currentGoldPrice, setCurrentGoldPrice] = useState<number>(0);
   const [lastMonthGoldPrice, setLastMonthGoldPrice] = useState<number>(0);
-  const [currencyFormat, setCurrencyFormat] = useState<CurrencyFormat>('normal');
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
   const [isLoadingHistoricalPrice, setIsLoadingHistoricalPrice] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -32,23 +30,25 @@ const GoldTracker = () => {
   });
   const { toast } = useToast();
 
-  // Load data on component mount
+  // Load data on component mount (silent — no toasts)
   useEffect(() => {
-    loadPurchases();
-    fetchCurrentGoldPrice();
-    fetchLastMonthGoldPrice();
+    loadPurchases(false);
+    fetchCurrentGoldPrice(false);
+    fetchLastMonthGoldPrice(false);
   }, []);
 
-  const loadPurchases = async () => {
+  const loadPurchases = async (showToast = true) => {
     setIsLoadingData(true);
     const result = await goldPurchaseApi.getAll();
 
     if (result.success && result.data) {
       setPurchases(result.data);
-      toast({
-        title: "Data Loaded",
-        description: "Gold purchases loaded from server",
-      });
+      if (showToast) {
+        toast({
+          title: "Data Loaded",
+          description: "Gold purchases loaded from server",
+        });
+      }
     } else {
       // Keep existing local state if API fails
       console.log("Using local state - API not available");
@@ -56,17 +56,19 @@ const GoldTracker = () => {
     setIsLoadingData(false);
   };
 
-  const fetchCurrentGoldPrice = async () => {
+  const fetchCurrentGoldPrice = async (showToast = true) => {
     setIsLoadingPrice(true);
     const result = await goldPriceApi.getCurrentPrice();
 
     if (result.success && result.data) {
       setCurrentGoldPrice(result.data);
-      toast({
-        title: "Price Updated",
-        description: `Current gold price: ₹${result.data.toFixed(2)}/g`,
-      });
-    } else {
+      if (showToast) {
+        toast({
+          title: "Price Updated",
+          description: `Current gold price: ₹${result.data.toFixed(2)}/g`,
+        });
+      }
+    } else if (showToast) {
       toast({
         title: "Price Fetch Failed",
         description: "Using manual price input",
@@ -76,17 +78,19 @@ const GoldTracker = () => {
     setIsLoadingPrice(false);
   };
 
-  const fetchLastMonthGoldPrice = async () => {
+  const fetchLastMonthGoldPrice = async (showToast = true) => {
     setIsLoadingHistoricalPrice(true);
     const result = await goldPriceApi.getHistoricalPrice(30);
 
     if (result.success && result.data) {
       setLastMonthGoldPrice(result.data);
-      toast({
-        title: "Historical Price Updated",
-        description: `30-day old gold price: ₹${result.data.toFixed(2)}/g`,
-      });
-    } else {
+      if (showToast) {
+        toast({
+          title: "Historical Price Updated",
+          description: `30-day old gold price: ₹${result.data.toFixed(2)}/g`,
+        });
+      }
+    } else if (showToast) {
       toast({
         title: "Historical Price Fetch Failed",
         description: "Please enter manually",
@@ -108,7 +112,7 @@ const GoldTracker = () => {
 
     const grams = parseFloat(newPurchase.grams);
 
-    if (grams <= 0) {
+    if (isNaN(grams) || grams <= 0) {
       toast({
         title: "Invalid Values",
         description: "Grams must be a positive number.",
@@ -117,19 +121,21 @@ const GoldTracker = () => {
       return;
     }
 
-    // Fetch gold price for the selected date
+    // Try to fetch gold price for the selected date, fall back to current price input
+    let pricePerGram = currentGoldPrice;
     const priceResult = await goldPriceApi.getPriceAtDate(newPurchase.date);
+    if (priceResult.success && priceResult.data) {
+      pricePerGram = priceResult.data;
+    }
 
-    if (!priceResult.success || !priceResult.data) {
+    if (pricePerGram <= 0) {
       toast({
-        title: "Price Fetch Failed",
-        description: "Could not fetch gold price for the selected date.",
+        title: "Missing Price",
+        description: "Please enter the current gold price before adding a purchase.",
         variant: "destructive"
       });
       return;
     }
-
-    const pricePerGram = priceResult.data;
     const amountPaid = grams * pricePerGram;
 
     const purchaseData = {
@@ -203,15 +209,27 @@ const GoldTracker = () => {
 
   // Get last investment date and calculate returns since then
   const purchasesByDate = [...purchases].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const lastInvestmentDate = purchasesByDate.length > 0 ? purchasesByDate[0].date : null;
-  const lastInvestmentPrice = purchasesByDate.length > 0 ? purchasesByDate[0].pricePerGram : 0;
-  const returnSinceLastInvestment = lastInvestmentPrice > 0 ? currentGoldPrice - lastInvestmentPrice : 0;
-  const returnSinceLastInvestmentPercentage = lastInvestmentPrice > 0 ? (returnSinceLastInvestment / lastInvestmentPrice) * 100 : 0;
+  const lastPurchase = purchasesByDate.length > 0 ? purchasesByDate[0] : null;
+  const lastInvestmentDate = lastPurchase ? lastPurchase.date : null;
+  const lastInvestmentPrice = lastPurchase ? lastPurchase.pricePerGram : 0;
+  // Return since last investment: price change applied to the last purchase's grams only
+  const returnSinceLastInvestment = lastPurchase && lastInvestmentPrice > 0
+    ? (currentGoldPrice - lastInvestmentPrice) * lastPurchase.grams
+    : 0;
+  const returnSinceLastInvestmentPercentage = lastInvestmentPrice > 0
+    ? ((currentGoldPrice - lastInvestmentPrice) / lastInvestmentPrice) * 100
+    : 0;
 
   // XIRR calculations
   const totalXIRR = calculateGoldXIRR(purchases, currentGoldPrice) * 100;
-  const monthlyXIRR = lastMonthGoldPrice > 0 ? calculateGoldXIRR(purchases, lastMonthGoldPrice, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) * 100 : 0;
-  const sinceLastInvestmentXIRR = lastInvestmentDate ? calculateGoldXIRR(purchases, currentGoldPrice, new Date()) * 100 : 0;
+  // 30-day XIRR: only meaningful if we have both prices
+  const monthlyXIRR = (lastMonthGoldPrice > 0 && currentGoldPrice > 0 && totalGrams > 0)
+    ? ((currentGoldPrice / lastMonthGoldPrice) ** (365 / 30) - 1) * 100
+    : 0;
+  // Since last investment XIRR: only uses the last purchase
+  const sinceLastInvestmentXIRR = lastPurchase
+    ? calculateGoldXIRR([lastPurchase], currentGoldPrice) * 100
+    : 0;
 
   // Sorting function
   const handleSort = (field: SortField) => {
@@ -262,27 +280,26 @@ const GoldTracker = () => {
     return 0;
   });
 
-  // Prepare chart data
-  const chartData = purchases
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .reduce((acc, purchase, index) => {
-      const cumulativeInvested = purchases
-        .slice(0, index + 1)
-        .reduce((sum, p) => sum + p.amountPaid, 0);
-      const cumulativeGrams = purchases
-        .slice(0, index + 1)
-        .reduce((sum, p) => sum + p.grams, 0);
-      const cumulativeValue = cumulativeGrams * currentGoldPrice;
-      const cumulativeReturn = cumulativeValue - cumulativeInvested;
+  // Prepare chart data — sort first, then compute cumulative values from the sorted array
+  const chronologicalPurchases = [...purchases].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const chartData = chronologicalPurchases.reduce((acc, purchase, index) => {
+    const cumulativeInvested = chronologicalPurchases
+      .slice(0, index + 1)
+      .reduce((sum, p) => sum + p.amountPaid, 0);
+    const cumulativeGrams = chronologicalPurchases
+      .slice(0, index + 1)
+      .reduce((sum, p) => sum + p.grams, 0);
+    const cumulativeValue = cumulativeGrams * currentGoldPrice;
+    const cumulativeReturn = cumulativeValue - cumulativeInvested;
 
-      acc.push({
-        date: purchase.date,
-        invested: cumulativeInvested,
-        returns: cumulativeReturn,
-        value: cumulativeValue
-      });
-      return acc;
-    }, [] as Array<{ date: string; invested: number; returns: number; value: number }>);
+    acc.push({
+      date: purchase.date,
+      invested: cumulativeInvested,
+      returns: cumulativeReturn,
+      value: cumulativeValue
+    });
+    return acc;
+  }, [] as Array<{ date: string; invested: number; returns: number; value: number }>);
 
   const chartConfig = {
     invested: {
@@ -334,21 +351,6 @@ const GoldTracker = () => {
             </p>
           </div>
 
-          {/* Currency Format Selector */}
-          <div className="glass-card rounded-xl px-4 py-3 flex items-center gap-3">
-            <Settings className="w-4 h-4 text-gold/60" />
-            <span className="text-xs font-medium text-muted-foreground hidden sm:inline">Display</span>
-            <Select value={currencyFormat} onValueChange={(value: CurrencyFormat) => setCurrencyFormat(value)}>
-              <SelectTrigger className="w-28 h-8 text-xs bg-transparent border-gold/20 focus:ring-gold/30">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-gold/20">
-                <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="thousands">Thousands (K)</SelectItem>
-                <SelectItem value="lacs">Lacs (L)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
 
         {/* Summary Cards */}
@@ -386,9 +388,9 @@ const GoldTracker = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="relative">
-              <div className="text-2xl font-bold text-foreground font-playfair">{formatCurrency(totalInvested, currencyFormat)}</div>
+              <div className="text-2xl font-bold text-foreground font-playfair">{formatCurrency(totalInvested)}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Avg: {formatCurrency(averagePricePerGram, currencyFormat)}/g
+                Avg: {formatCurrency(averagePricePerGram)}/g
               </div>
             </CardContent>
           </Card>
@@ -406,9 +408,9 @@ const GoldTracker = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="relative">
-              <div className="text-2xl font-bold text-gold font-playfair">{formatCurrency(currentValue, currencyFormat)}</div>
+              <div className="text-2xl font-bold text-gold font-playfair">{formatCurrency(currentValue)}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                @ {formatCurrency(currentGoldPrice, currencyFormat)}/g
+                @ {formatCurrency(currentGoldPrice)}/g
               </div>
             </CardContent>
           </Card>
@@ -427,7 +429,7 @@ const GoldTracker = () => {
             </CardHeader>
             <CardContent className="relative">
               <div className={`text-2xl font-bold flex items-center gap-2 font-playfair ${totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {formatCurrency(totalReturn, currencyFormat)}
+                {formatCurrency(totalReturn)}
                 <span className={`text-sm font-inter font-medium px-2 py-0.5 rounded-full ${totalReturn >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                   {formatPercentage(returnPercentage)}
                 </span>
@@ -453,7 +455,7 @@ const GoldTracker = () => {
             </CardHeader>
             <CardContent>
               <div className={`text-xl font-bold flex items-center gap-2 font-playfair ${monthlyReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {formatCurrency(monthlyReturn, currencyFormat)}
+                {formatCurrency(monthlyReturn)}
                 <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded-full ${monthlyReturn >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                   {formatPercentage(monthlyReturnPercentage)}
                 </span>
@@ -476,7 +478,7 @@ const GoldTracker = () => {
             </CardHeader>
             <CardContent>
               <div className={`text-xl font-bold flex items-center gap-2 font-playfair ${returnSinceLastInvestment >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {formatCurrency(returnSinceLastInvestment * totalGrams, currencyFormat)}
+                {formatCurrency(returnSinceLastInvestment)}
                 <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded-full ${returnSinceLastInvestment >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                   {formatPercentage(returnSinceLastInvestmentPercentage)}
                 </span>
@@ -548,7 +550,7 @@ const GoldTracker = () => {
                 </Button>
               </div>
               <div className="text-xs text-muted-foreground mt-2.5 flex items-center gap-1">
-                Your average: <span className="text-gold/70 font-medium">{formatCurrency(averagePricePerGram, currencyFormat)}/g</span>
+                Your average: <span className="text-gold/70 font-medium">{formatCurrency(averagePricePerGram)}/g</span>
               </div>
             </CardContent>
           </Card>
@@ -626,7 +628,7 @@ const GoldTracker = () => {
                         axisLine={false}
                       />
                       <YAxis
-                        tickFormatter={(value) => formatCurrency(value, currencyFormat)}
+                        tickFormatter={(value) => formatCurrency(value)}
                         stroke="hsl(var(--muted-foreground))"
                         fontSize={11}
                         tickLine={false}
@@ -636,7 +638,7 @@ const GoldTracker = () => {
                         content={<ChartTooltipContent />}
                         labelFormatter={(value) => new Date(value).toLocaleDateString()}
                         formatter={(value: number, name: string) => [
-                          formatCurrency(value, currencyFormat),
+                          formatCurrency(value),
                           name === "invested" ? "Total Invested" : "Investment + Returns"
                         ]}
                       />
@@ -693,7 +695,7 @@ const GoldTracker = () => {
                         axisLine={false}
                       />
                       <YAxis
-                        tickFormatter={(value) => formatCurrency(value, currencyFormat)}
+                        tickFormatter={(value) => formatCurrency(value)}
                         stroke="hsl(var(--muted-foreground))"
                         fontSize={11}
                         tickLine={false}
@@ -703,7 +705,7 @@ const GoldTracker = () => {
                         content={<ChartTooltipContent />}
                         labelFormatter={(value) => new Date(value).toLocaleDateString()}
                         formatter={(value: number) => [
-                          formatCurrency(value, currencyFormat),
+                          formatCurrency(value),
                           "Total Returns"
                         ]}
                       />
@@ -835,13 +837,13 @@ const GoldTracker = () => {
                               {new Date(purchase.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </TableCell>
                             <TableCell className="font-medium text-gold/90">{formatWeight(purchase.grams)}</TableCell>
-                            <TableCell className="text-sm">{formatCurrency(purchase.amountPaid, currencyFormat)}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{formatCurrency(purchase.pricePerGram, currencyFormat)}</TableCell>
-                            <TableCell className="font-medium text-sm">{formatCurrency(currentValue, currencyFormat)}</TableCell>
+                            <TableCell className="text-sm">{formatCurrency(purchase.amountPaid)}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{formatCurrency(purchase.pricePerGram)}</TableCell>
+                            <TableCell className="font-medium text-sm">{formatCurrency(currentValue)}</TableCell>
                             <TableCell>
                               <div className={`flex items-center gap-1.5 text-sm font-medium ${returnAmount >= 0 ? 'text-success' : 'text-destructive'}`}>
                                 {returnAmount >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                {formatCurrency(returnAmount, currencyFormat)}
+                                {formatCurrency(returnAmount)}
                                 <span className={`text-xs px-1.5 py-0.5 rounded-md ${returnAmount >= 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
                                   {formatPercentage(returnPercent)}
                                 </span>
@@ -852,7 +854,7 @@ const GoldTracker = () => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removePurchase(purchase.id)}
-                                className="opacity-0 group-hover/row:opacity-100 transition-opacity text-destructive/60 hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                                className="opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity text-destructive/60 hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>

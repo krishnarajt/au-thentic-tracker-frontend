@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ const NotFound = () => {
           variant="outline"
           className="border-gold/20 hover:border-gold/30 hover:bg-gold/5 text-gold/80 hover:text-gold"
         >
-          <a href="/">Return to Portfolio</a>
+          <Link to="/">Return to Portfolio</Link>
         </Button>
       </div>
     </div>
