@@ -33,6 +33,7 @@ export interface PurchasesTabProps {
   addPurchase: () => void;
   removePurchase: (id: string) => void;
   updatePurchase: (id: string, updated: Partial<GoldPurchase>) => void;
+  importPurchases: (purchases: Omit<GoldPurchase, 'id'>[]) => void;
 }
 
 export interface AnalyticsTabProps {

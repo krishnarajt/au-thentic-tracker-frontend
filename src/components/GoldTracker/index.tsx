@@ -128,6 +128,20 @@ const GoldTracker = () => {
     }
   };
 
+  const importPurchases = async (imported: Omit<GoldPurchase, 'id'>[]) => {
+    const created: GoldPurchase[] = [];
+    for (const p of imported) {
+      const result = await goldPurchaseApi.create(p);
+      if (result.success && result.data) {
+        created.push(result.data);
+      } else {
+        created.push({ id: Date.now().toString() + Math.random(), ...p });
+      }
+    }
+    setPurchases(prev => [...prev, ...created]);
+    toast({ title: "Import Complete", description: `Imported ${created.length} purchase${created.length !== 1 ? 's' : ''}` });
+  };
+
   // ── Derived calculations ────────────────────────────────────────
   const totalGrams = purchases.reduce((sum, p) => sum + p.grams, 0);
   const totalInvested = purchases.reduce((sum, p) => sum + p.amountPaid, 0);
@@ -240,6 +254,7 @@ const GoldTracker = () => {
               addPurchase={addPurchase}
               removePurchase={removePurchase}
               updatePurchase={updatePurchase}
+              importPurchases={importPurchases}
             />
           </TabsContent>
 

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, Pencil, TrendingUp, TrendingDown, RefreshCw, ChevronUp, ChevronDown, ChevronsUpDown, Coins } from "lucide-react";
+import { Plus, Trash2, Pencil, TrendingUp, TrendingDown, RefreshCw, ChevronUp, ChevronDown, ChevronsUpDown, Coins, Download, Upload } from "lucide-react";
 import { formatCurrency, formatWeight, formatPercentage } from "@/utils/formatters";
 import { GoldPurchase } from "@/types/gold";
 import { PurchasesTabProps, SortField, SortDirection } from "./types";
@@ -26,11 +26,13 @@ const PurchasesTab = ({
   addPurchase,
   removePurchase,
   updatePurchase,
+  importPurchases,
 }: PurchasesTabProps) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [editingPurchase, setEditingPurchase] = useState<GoldPurchase | null>(null);
   const [editForm, setEditForm] = useState({ grams: '', amountPaid: '', date: '', pricePerGram: '' });
+  const [isImporting, setIsImporting] = useState(false);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -97,6 +99,63 @@ const PurchasesTab = ({
     if (isNaN(grams) || isNaN(amountPaid) || isNaN(pricePerGram) || !editForm.date) return;
     updatePurchase(editingPurchase.id, { grams, amountPaid, date: editForm.date, pricePerGram });
     setEditingPurchase(null);
+  };
+
+  const exportCsv = () => {
+    const header = 'date,grams,amountPaid,pricePerGram';
+    const rows = purchases.map(p =>
+      `${p.date},${p.grams},${p.amountPaid},${p.pricePerGram}`
+    );
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gold-purchases-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportCsv = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      const lines = text.trim().split('\n');
+      if (lines.length < 2) { setIsImporting(false); return; }
+
+      const header = lines[0].split(',').map(h => h.trim());
+      const dateIdx = header.indexOf('date');
+      const gramsIdx = header.indexOf('grams');
+      const amountPaidIdx = header.indexOf('amountPaid');
+      const pricePerGramIdx = header.indexOf('pricePerGram');
+
+      if (dateIdx === -1 || gramsIdx === -1 || amountPaidIdx === -1 || pricePerGramIdx === -1) {
+        setIsImporting(false);
+        return;
+      }
+
+      const parsed = lines.slice(1)
+        .map(line => {
+          const cols = line.split(',').map(c => c.trim());
+          const grams = parseFloat(cols[gramsIdx]);
+          const amountPaid = parseFloat(cols[amountPaidIdx]);
+          const pricePerGram = parseFloat(cols[pricePerGramIdx]);
+          const date = cols[dateIdx];
+          if (isNaN(grams) || isNaN(amountPaid) || isNaN(pricePerGram) || !date) return null;
+          return { grams, amountPaid, date, pricePerGram };
+        })
+        .filter((p): p is Omit<GoldPurchase, 'id'> => p !== null);
+
+      if (parsed.length > 0) {
+        await importPurchases(parsed);
+      }
+      setIsImporting(false);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const SortButton = ({ field, label }: { field: SortField; label: string }) => (
@@ -252,11 +311,40 @@ const PurchasesTab = ({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-playfair text-gold/90">Purchase History</CardTitle>
-            {purchases.length > 0 && (
-              <span className="text-xs text-muted-foreground font-inter">
-                {purchases.length} record{purchases.length !== 1 ? 's' : ''}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {purchases.length > 0 && (
+                <span className="text-xs text-muted-foreground font-inter">
+                  {purchases.length} record{purchases.length !== 1 ? 's' : ''}
+                </span>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportCsv}
+                disabled={purchases.length === 0}
+                className="border-gold/20 hover:bg-gold/10 hover:border-gold/30 text-gold/80 hover:text-gold h-7 text-xs gap-1.5"
+              >
+                <Download className="w-3 h-3" />
+                Export
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isImporting}
+                className="border-gold/20 hover:bg-gold/10 hover:border-gold/30 text-gold/80 hover:text-gold h-7 text-xs gap-1.5 relative"
+                onClick={() => document.getElementById('csv-import')?.click()}
+              >
+                <Upload className="w-3 h-3" />
+                {isImporting ? 'Importing...' : 'Import'}
+                <input
+                  id="csv-import"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleImportCsv}
+                  className="hidden"
+                />
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
