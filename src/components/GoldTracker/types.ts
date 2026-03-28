@@ -32,6 +32,7 @@ export interface PurchasesTabProps {
   fetchLastMonthGoldPrice: () => void;
   addPurchase: () => void;
   removePurchase: (id: string) => void;
+  updatePurchase: (id: string, updated: Partial<GoldPurchase>) => void;
 }
 
 export interface AnalyticsTabProps {

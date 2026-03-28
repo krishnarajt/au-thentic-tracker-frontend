@@ -117,6 +117,17 @@ const GoldTracker = () => {
     });
   };
 
+  const updatePurchase = async (id: string, updated: Partial<GoldPurchase>) => {
+    const result = await goldPurchaseApi.update(id, updated);
+    if (result.success && result.data) {
+      setPurchases(purchases.map(p => p.id === id ? result.data! : p));
+      toast({ title: "Purchase Updated", description: "Gold purchase updated on server" });
+    } else {
+      setPurchases(purchases.map(p => p.id === id ? { ...p, ...updated } : p));
+      toast({ title: "Purchase Updated Locally", description: "Gold purchase updated (server unavailable)" });
+    }
+  };
+
   // ── Derived calculations ────────────────────────────────────────
   const totalGrams = purchases.reduce((sum, p) => sum + p.grams, 0);
   const totalInvested = purchases.reduce((sum, p) => sum + p.amountPaid, 0);
@@ -228,6 +239,7 @@ const GoldTracker = () => {
               fetchLastMonthGoldPrice={fetchLastMonthGoldPrice}
               addPurchase={addPurchase}
               removePurchase={removePurchase}
+              updatePurchase={updatePurchase}
             />
           </TabsContent>
 

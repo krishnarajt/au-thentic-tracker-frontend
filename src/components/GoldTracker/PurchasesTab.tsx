@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, TrendingUp, TrendingDown, RefreshCw, ChevronUp, ChevronDown, ChevronsUpDown, Coins } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Plus, Trash2, Pencil, TrendingUp, TrendingDown, RefreshCw, ChevronUp, ChevronDown, ChevronsUpDown, Coins } from "lucide-react";
 import { formatCurrency, formatWeight, formatPercentage } from "@/utils/formatters";
+import { GoldPurchase } from "@/types/gold";
 import { PurchasesTabProps, SortField, SortDirection } from "./types";
 
 const PurchasesTab = ({
@@ -23,9 +25,12 @@ const PurchasesTab = ({
   fetchLastMonthGoldPrice,
   addPurchase,
   removePurchase,
+  updatePurchase,
 }: PurchasesTabProps) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [editingPurchase, setEditingPurchase] = useState<GoldPurchase | null>(null);
+  const [editForm, setEditForm] = useState({ grams: '', amountPaid: '', date: '', pricePerGram: '' });
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -73,6 +78,26 @@ const PurchasesTab = ({
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
     return 0;
   });
+
+  const openEditDialog = (purchase: GoldPurchase) => {
+    setEditingPurchase(purchase);
+    setEditForm({
+      grams: String(purchase.grams),
+      amountPaid: String(purchase.amountPaid),
+      date: purchase.date,
+      pricePerGram: String(purchase.pricePerGram),
+    });
+  };
+
+  const saveEdit = () => {
+    if (!editingPurchase) return;
+    const grams = parseFloat(editForm.grams);
+    const amountPaid = parseFloat(editForm.amountPaid);
+    const pricePerGram = parseFloat(editForm.pricePerGram);
+    if (isNaN(grams) || isNaN(amountPaid) || isNaN(pricePerGram) || !editForm.date) return;
+    updatePurchase(editingPurchase.id, { grams, amountPaid, date: editForm.date, pricePerGram });
+    setEditingPurchase(null);
+  };
 
   const SortButton = ({ field, label }: { field: SortField; label: string }) => (
     <Button
@@ -297,14 +322,24 @@ const PurchasesTab = ({
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removePurchase(purchase.id)}
-                              className="opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity text-destructive/60 hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditDialog(purchase)}
+                                className="opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity text-gold/60 hover:text-gold hover:bg-gold/10 h-8 w-8 p-0"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removePurchase(purchase.id)}
+                                className="opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity text-destructive/60 hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -316,6 +351,77 @@ const PurchasesTab = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Purchase Dialog */}
+      <Dialog open={!!editingPurchase} onOpenChange={(open) => !open && setEditingPurchase(null)}>
+        <DialogContent className="glass-card border-gold/20 sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-playfair text-gold">Edit Purchase</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Grams</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={editForm.grams}
+                onChange={(e) => setEditForm({ ...editForm, grams: e.target.value })}
+                className="mt-1.5 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount Paid</label>
+              <div className="relative mt-1.5">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editForm.amountPaid}
+                  onChange={(e) => setEditForm({ ...editForm, amountPaid: e.target.value })}
+                  className="pl-7 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</label>
+              <Input
+                type="date"
+                value={editForm.date}
+                onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                className="mt-1.5 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price per Gram</label>
+              <div className="relative mt-1.5">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editForm.pricePerGram}
+                  onChange={(e) => setEditForm({ ...editForm, pricePerGram: e.target.value })}
+                  className="pl-7 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setEditingPurchase(null)}
+              className="border-gold/20 hover:bg-gold/10 text-gold/80"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={saveEdit}
+              className="bg-gradient-to-r from-gold-dark via-gold to-gold-dark hover:from-gold hover:via-gold-light hover:to-gold text-background font-semibold shadow-lg shadow-gold/20"
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
