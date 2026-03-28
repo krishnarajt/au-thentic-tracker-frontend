@@ -2,7 +2,7 @@
 import { GoldPurchase } from '@/types/gold';
 
 // Configuration - update these URLs to point to your NAS backend
-const API_BASE_URL = 'https://api-get-away.krishnarajthadesar.in/authentic-tracker/api';
+const API_BASE_URL = 'https://api-get-away.krishnarajthadesar.in/api/authentic-tracker';
 
 // Helper function to get user ID
 const getUserId = () => {
