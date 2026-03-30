@@ -1,0 +1,13 @@
+
+services:
+  authentic_frontend:
+    container_name: authentic_frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    image: krishnarajt/authentic_frontend:latest
+    ports:
+      - "80:80"
+    restart: unless-stopped

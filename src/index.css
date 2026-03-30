@@ -1,0 +1,327 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Au-thentic Tracker - Premium Gold Investment Design System
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Deep luxury dark background */
+    --background: 220 20% 6%;
+    --foreground: 45 20% 92%;
+
+    --card: 220 18% 10%;
+    --card-foreground: 45 20% 92%;
+
+    --popover: 220 18% 10%;
+    --popover-foreground: 45 20% 92%;
+
+    /* Gold primary */
+    --primary: 42 87% 55%;
+    --primary-foreground: 220 20% 6%;
+
+    /* Warm gold secondary */
+    --secondary: 36 72% 45%;
+    --secondary-foreground: 45 20% 92%;
+
+    --muted: 220 15% 15%;
+    --muted-foreground: 45 10% 55%;
+
+    --accent: 42 50% 18%;
+    --accent-foreground: 45 20% 92%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 42 20% 18%;
+    --input: 220 15% 14%;
+    --ring: 42 87% 55%;
+
+    /* Gold palette */
+    --gold: 42 87% 55%;
+    --gold-light: 45 90% 65%;
+    --gold-muted: 42 30% 15%;
+    --gold-dark: 36 72% 35%;
+    --gold-shimmer: 48 100% 72%;
+
+    /* Status colors */
+    --success: 152 60% 45%;
+    --success-foreground: 152 60% 95%;
+
+    /* Chart colors - gold themed */
+    --chart-1: 42 87% 55%;
+    --chart-2: 152 60% 45%;
+    --chart-3: 36 72% 45%;
+    --chart-4: 48 100% 72%;
+    --chart-5: 28 80% 50%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 220 20% 8%;
+    --sidebar-foreground: 45 20% 85%;
+    --sidebar-primary: 42 87% 55%;
+    --sidebar-primary-foreground: 220 20% 6%;
+    --sidebar-accent: 42 50% 18%;
+    --sidebar-accent-foreground: 45 20% 92%;
+    --sidebar-border: 42 20% 18%;
+    --sidebar-ring: 42 87% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--gold) / 0.3);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--gold) / 0.5);
+  }
+}
+
+@layer utilities {
+  /* Gold gradient text */
+  .text-gold-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(48 100% 72%) 0%,
+      hsl(42 87% 55%) 25%,
+      hsl(36 72% 45%) 50%,
+      hsl(42 87% 55%) 75%,
+      hsl(48 100% 72%) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Animated gold shimmer text */
+  .text-gold-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(36 72% 45%) 0%,
+      hsl(48 100% 72%) 25%,
+      hsl(42 87% 55%) 50%,
+      hsl(48 100% 72%) 75%,
+      hsl(36 72% 45%) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer-text 4s linear infinite;
+  }
+
+  /* Glass card effect */
+  .glass-card {
+    background: linear-gradient(
+      135deg,
+      hsl(220 18% 12% / 0.8) 0%,
+      hsl(220 18% 8% / 0.6) 100%
+    );
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--gold) / 0.12);
+  }
+
+  .glass-card-gold {
+    background: linear-gradient(
+      135deg,
+      hsl(42 30% 12% / 0.8) 0%,
+      hsl(220 18% 8% / 0.6) 100%
+    );
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--gold) / 0.2);
+  }
+
+  /* Gold glow effects */
+  .glow-gold {
+    box-shadow: 0 0 20px hsl(var(--gold) / 0.15),
+                0 0 60px hsl(var(--gold) / 0.05);
+  }
+
+  .glow-gold-sm {
+    box-shadow: 0 0 10px hsl(var(--gold) / 0.1),
+                0 0 30px hsl(var(--gold) / 0.03);
+  }
+
+  .glow-gold-lg {
+    box-shadow: 0 0 30px hsl(var(--gold) / 0.2),
+                0 0 80px hsl(var(--gold) / 0.08),
+                0 0 120px hsl(var(--gold) / 0.03);
+  }
+
+  /* Gold border glow on hover */
+  .gold-border-glow {
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .gold-border-glow:hover {
+    border-color: hsl(var(--gold) / 0.3);
+    box-shadow: 0 0 20px hsl(var(--gold) / 0.1),
+                0 0 40px hsl(var(--gold) / 0.05);
+  }
+
+  /* Subtle gold line on top of card */
+  .gold-top-line::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--gold) / 0.5),
+      transparent
+    );
+  }
+
+  /* Background patterns */
+  .bg-gold-radial {
+    background: radial-gradient(
+      ellipse at 50% 0%,
+      hsl(var(--gold) / 0.08) 0%,
+      transparent 60%
+    );
+  }
+
+  .bg-luxury {
+    background:
+      radial-gradient(ellipse at 20% 0%, hsl(var(--gold) / 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, hsl(var(--gold) / 0.04) 0%, transparent 50%),
+      hsl(var(--background));
+  }
+
+  /* Animated gold shimmer border */
+  .shimmer-border {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer-border::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      hsl(var(--gold) / 0.15) 60deg,
+      transparent 120deg
+    );
+    animation: rotate-shimmer 6s linear infinite;
+    z-index: -1;
+  }
+}
+
+/* Keyframe animations */
+@keyframes shimmer-text {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes rotate-shimmer {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse-gold {
+  0%, 100% {
+    box-shadow: 0 0 10px hsl(var(--gold) / 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px hsl(var(--gold) / 0.2),
+                0 0 50px hsl(var(--gold) / 0.05);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes gold-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes number-tick {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Selection color */
+::selection {
+  background: hsl(var(--gold) / 0.3);
+  color: hsl(var(--foreground));
+}

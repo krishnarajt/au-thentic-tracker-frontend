@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A1A2E"/>
+      <stop offset="100%" stop-color="#0F0F1A"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5D060"/>
+      <stop offset="40%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#A67C00"/>
+    </linearGradient>
+    <linearGradient id="goldLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F5E6A3"/>
+      <stop offset="100%" stop-color="#D4AF37"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Gold coin outer ring -->
+  <circle cx="256" cy="256" r="190" fill="url(#gold)"/>
+  <!-- Inner ring border -->
+  <circle cx="256" cy="256" r="165" fill="none" stroke="#A67C00" stroke-width="4"/>
+  <!-- Coin inner face -->
+  <circle cx="256" cy="256" r="160" fill="url(#goldLight)" opacity="0.25"/>
+  <!-- Bold "Au" -->
+  <text x="256" y="290" font-family="Georgia, serif" font-weight="700" font-size="140" fill="url(#bg)" text-anchor="middle" opacity="0.85">Au</text>
+  <!-- Shine highlight -->
+  <ellipse cx="200" cy="180" rx="60" ry="30" fill="#F5E6A3" opacity="0.2" transform="rotate(-30 200 180)"/>
+</svg>
