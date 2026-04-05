@@ -1,7 +1,16 @@
 import { useAuth } from '@/contexts/AuthContext';
 import LoginForm from './LoginForm';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Sparkles } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { LogOut, Palette, Sparkles, User } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -9,6 +18,12 @@ interface AuthWrapperProps {
 
 const AuthWrapper = ({ children }: AuthWrapperProps) => {
   const { user, logout, isLoading } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (isLoading) {
     return (
@@ -53,15 +68,33 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={logout}
-            className="text-muted-foreground hover:text-foreground hover:bg-gold/5 transition-all duration-200 gap-2"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline text-xs">Sign Out</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            {mounted ? (
+              <div className="flex items-center gap-2">
+                <Palette className="hidden sm:block w-3.5 h-3.5 text-gold/70" />
+                <Select value={theme} onValueChange={setTheme}>
+                  <SelectTrigger className="h-9 w-[148px] border-gold/15 bg-background/70 text-xs text-foreground/80 focus:ring-gold/30">
+                    <SelectValue placeholder="Theme" />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    <SelectItem value="dark">Dark</SelectItem>
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="solaris-light">Solaris Light</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={logout}
+              className="text-muted-foreground hover:text-foreground hover:bg-gold/5 transition-all duration-200 gap-2"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-xs">Sign Out</span>
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -68,6 +68,168 @@
     --sidebar-border: 42 20% 18%;
     --sidebar-ring: 42 87% 55%;
   }
+
+  .dark {
+    --background: 220 20% 6%;
+    --foreground: 45 20% 92%;
+
+    --card: 220 18% 10%;
+    --card-foreground: 45 20% 92%;
+
+    --popover: 220 18% 10%;
+    --popover-foreground: 45 20% 92%;
+
+    --primary: 42 87% 55%;
+    --primary-foreground: 220 20% 6%;
+
+    --secondary: 36 72% 45%;
+    --secondary-foreground: 45 20% 92%;
+
+    --muted: 220 15% 15%;
+    --muted-foreground: 45 10% 55%;
+
+    --accent: 42 50% 18%;
+    --accent-foreground: 45 20% 92%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 42 20% 18%;
+    --input: 220 15% 14%;
+    --ring: 42 87% 55%;
+
+    --gold: 42 87% 55%;
+    --gold-light: 45 90% 65%;
+    --gold-muted: 42 30% 15%;
+    --gold-dark: 36 72% 35%;
+    --gold-shimmer: 48 100% 72%;
+
+    --success: 152 60% 45%;
+    --success-foreground: 152 60% 95%;
+
+    --chart-1: 42 87% 55%;
+    --chart-2: 152 60% 45%;
+    --chart-3: 36 72% 45%;
+    --chart-4: 48 100% 72%;
+    --chart-5: 28 80% 50%;
+
+    --sidebar-background: 220 20% 8%;
+    --sidebar-foreground: 45 20% 85%;
+    --sidebar-primary: 42 87% 55%;
+    --sidebar-primary-foreground: 220 20% 6%;
+    --sidebar-accent: 42 50% 18%;
+    --sidebar-accent-foreground: 45 20% 92%;
+    --sidebar-border: 42 20% 18%;
+    --sidebar-ring: 42 87% 55%;
+  }
+
+  .light {
+    --background: 42 50% 97%;
+    --foreground: 32 32% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 32 32% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 32 32% 14%;
+
+    --primary: 41 84% 46%;
+    --primary-foreground: 32 32% 10%;
+
+    --secondary: 40 44% 90%;
+    --secondary-foreground: 32 26% 18%;
+
+    --muted: 40 30% 92%;
+    --muted-foreground: 32 14% 38%;
+
+    --accent: 44 72% 88%;
+    --accent-foreground: 32 28% 18%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 36 30% 82%;
+    --input: 36 30% 88%;
+    --ring: 41 84% 46%;
+
+    --gold: 41 84% 46%;
+    --gold-light: 45 92% 58%;
+    --gold-muted: 44 54% 86%;
+    --gold-dark: 37 76% 34%;
+    --gold-shimmer: 48 100% 68%;
+
+    --success: 152 55% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --chart-1: 41 84% 46%;
+    --chart-2: 152 55% 36%;
+    --chart-3: 28 70% 42%;
+    --chart-4: 48 100% 60%;
+    --chart-5: 15 72% 52%;
+
+    --sidebar-background: 40 43% 95%;
+    --sidebar-foreground: 32 26% 18%;
+    --sidebar-primary: 41 84% 46%;
+    --sidebar-primary-foreground: 32 32% 10%;
+    --sidebar-accent: 44 72% 88%;
+    --sidebar-accent-foreground: 32 28% 18%;
+    --sidebar-border: 36 30% 82%;
+    --sidebar-ring: 41 84% 46%;
+  }
+
+  .solaris-light {
+    --background: 44 70% 95%;
+    --foreground: 190 35% 20%;
+
+    --card: 46 67% 98%;
+    --card-foreground: 190 35% 20%;
+
+    --popover: 46 67% 98%;
+    --popover-foreground: 190 35% 20%;
+
+    --primary: 39 90% 44%;
+    --primary-foreground: 190 38% 14%;
+
+    --secondary: 44 45% 88%;
+    --secondary-foreground: 190 30% 22%;
+
+    --muted: 45 35% 90%;
+    --muted-foreground: 190 18% 42%;
+
+    --accent: 172 32% 84%;
+    --accent-foreground: 190 32% 18%;
+
+    --destructive: 9 72% 47%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 42 28% 78%;
+    --input: 42 30% 84%;
+    --ring: 39 90% 44%;
+
+    --gold: 39 90% 44%;
+    --gold-light: 46 96% 58%;
+    --gold-muted: 42 45% 84%;
+    --gold-dark: 34 80% 32%;
+    --gold-shimmer: 48 100% 66%;
+
+    --success: 175 54% 32%;
+    --success-foreground: 0 0% 100%;
+
+    --chart-1: 39 90% 44%;
+    --chart-2: 175 54% 32%;
+    --chart-3: 24 72% 46%;
+    --chart-4: 198 42% 46%;
+    --chart-5: 9 72% 47%;
+
+    --sidebar-background: 44 62% 92%;
+    --sidebar-foreground: 190 35% 20%;
+    --sidebar-primary: 39 90% 44%;
+    --sidebar-primary-foreground: 190 38% 14%;
+    --sidebar-accent: 172 32% 84%;
+    --sidebar-accent-foreground: 190 32% 18%;
+    --sidebar-border: 42 28% 78%;
+    --sidebar-ring: 39 90% 44%;
+  }
 }
 
 @layer base {
@@ -155,6 +317,26 @@
     border: 1px solid hsl(var(--gold) / 0.2);
   }
 
+  .light .glass-card,
+  .solaris-light .glass-card {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card) / 0.96) 0%,
+      hsl(var(--background) / 0.9) 100%
+    );
+    border: 1px solid hsl(var(--gold) / 0.14);
+  }
+
+  .light .glass-card-gold,
+  .solaris-light .glass-card-gold {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gold-light) / 0.18) 0%,
+      hsl(var(--card) / 0.94) 100%
+    );
+    border: 1px solid hsl(var(--gold) / 0.24);
+  }
+
   /* Gold glow effects */
   .glow-gold {
     box-shadow: 0 0 20px hsl(var(--gold) / 0.15),
@@ -214,6 +396,20 @@
       radial-gradient(ellipse at 20% 0%, hsl(var(--gold) / 0.06) 0%, transparent 50%),
       radial-gradient(ellipse at 80% 100%, hsl(var(--gold) / 0.04) 0%, transparent 50%),
       hsl(var(--background));
+  }
+
+  .light .bg-luxury {
+    background:
+      radial-gradient(ellipse at 20% 0%, hsl(var(--gold) / 0.14) 0%, transparent 46%),
+      radial-gradient(ellipse at 100% 100%, hsl(var(--gold-dark) / 0.08) 0%, transparent 48%),
+      linear-gradient(180deg, hsl(44 55% 98%) 0%, hsl(var(--background)) 100%);
+  }
+
+  .solaris-light .bg-luxury {
+    background:
+      radial-gradient(ellipse at 18% 0%, hsl(var(--gold) / 0.16) 0%, transparent 44%),
+      radial-gradient(ellipse at 86% 100%, hsl(198 42% 46% / 0.1) 0%, transparent 52%),
+      linear-gradient(180deg, hsl(48 85% 97%) 0%, hsl(var(--background)) 100%);
   }
 
   /* Animated gold shimmer border */
