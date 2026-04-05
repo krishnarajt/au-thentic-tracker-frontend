@@ -24,8 +24,8 @@ export interface PurchasesTabProps {
   isLoadingHistoricalPrice: boolean;
   isLoadingData: boolean;
   averagePricePerGram: number;
-  newPurchase: { grams: string; date: string };
-  setNewPurchase: (value: { grams: string; date: string }) => void;
+  newPurchase: { grams: string; date: string; description: string };
+  setNewPurchase: (value: { grams: string; date: string; description: string }) => void;
   setCurrentGoldPrice: (value: number) => void;
   setLastMonthGoldPrice: (value: number) => void;
   fetchCurrentGoldPrice: () => void;

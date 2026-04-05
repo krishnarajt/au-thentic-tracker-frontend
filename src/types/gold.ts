@@ -4,5 +4,6 @@ export interface GoldPurchase {
   amountPaid: number;
   date: string;
   pricePerGram: number;
+  description: string;
   userId?: string;
 }

@@ -26,6 +26,22 @@ const saveGuestPurchases = (purchases: GoldPurchase[]) => {
   localStorage.setItem(GUEST_PURCHASES_KEY, JSON.stringify(purchases));
 };
 
+const normalizePurchase = (purchase: GoldPurchase): GoldPurchase => ({
+  ...purchase,
+  description: purchase.description ?? '',
+});
+
+const normalizePurchaseInput = <T extends Partial<GoldPurchase>>(purchase: T): T & { description: string } => ({
+  ...purchase,
+  description: purchase.description ?? '',
+});
+
+const normalizePurchasePatch = (purchase: Partial<GoldPurchase>): Partial<GoldPurchase> => (
+  'description' in purchase
+    ? { ...purchase, description: purchase.description ?? '' }
+    : purchase
+);
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -37,7 +53,7 @@ export const goldPurchaseApi = {
   // Get all purchases for a user
   getAll: async (): Promise<ApiResponse<GoldPurchase[]>> => {
     if (isGuest()) {
-      return { success: true, data: getGuestPurchases() };
+      return { success: true, data: getGuestPurchases().map(normalizePurchase) };
     }
     try {
       const userId = getUserId();
@@ -56,7 +72,7 @@ export const goldPurchaseApi = {
       }
 
       const data = await response.json();
-      return { success: true, data };
+      return { success: true, data: data.map(normalizePurchase) };
     } catch (error) {
       console.warn('Failed to fetch purchases from API:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
@@ -65,8 +81,9 @@ export const goldPurchaseApi = {
 
   // Create new purchase
   create: async (purchase: Omit<GoldPurchase, 'id'>): Promise<ApiResponse<GoldPurchase>> => {
+    const normalizedPurchase = normalizePurchaseInput(purchase);
     if (isGuest()) {
-      const newPurchase: GoldPurchase = { id: Date.now().toString(), ...purchase };
+      const newPurchase: GoldPurchase = { id: Date.now().toString(), ...normalizedPurchase };
       const purchases = getGuestPurchases();
       purchases.push(newPurchase);
       saveGuestPurchases(purchases);
@@ -74,7 +91,7 @@ export const goldPurchaseApi = {
     }
     try {
       const userId = getUserId();
-      const purchaseWithUser = userId ? { ...purchase, userId } : purchase;
+      const purchaseWithUser = userId ? { ...normalizedPurchase, userId } : normalizedPurchase;
 
       const response = await fetch(`${API_BASE_URL}/gold-purchases`, {
         method: 'POST',
@@ -90,7 +107,7 @@ export const goldPurchaseApi = {
       }
 
       const data = await response.json();
-      return { success: true, data };
+      return { success: true, data: normalizePurchase(data) };
     } catch (error) {
       console.warn('Failed to create purchase via API:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
@@ -99,17 +116,18 @@ export const goldPurchaseApi = {
 
   // Update purchase
   update: async (id: string, purchase: Partial<GoldPurchase>): Promise<ApiResponse<GoldPurchase>> => {
+    const normalizedPurchase = normalizePurchasePatch(purchase);
     if (isGuest()) {
       const purchases = getGuestPurchases();
       const index = purchases.findIndex(p => p.id === id);
       if (index === -1) return { success: false, error: 'Purchase not found' };
-      purchases[index] = { ...purchases[index], ...purchase };
+      purchases[index] = normalizePurchase({ ...purchases[index], ...normalizedPurchase });
       saveGuestPurchases(purchases);
       return { success: true, data: purchases[index] };
     }
     try {
       const userId = getUserId();
-      const purchaseWithUser = userId ? { ...purchase, userId } : purchase;
+      const purchaseWithUser = userId ? { ...normalizedPurchase, userId } : normalizedPurchase;
 
       const response = await fetch(`${API_BASE_URL}/gold-purchases/${id}`, {
         method: 'PUT',
@@ -125,7 +143,7 @@ export const goldPurchaseApi = {
       }
 
       const data = await response.json();
-      return { success: true, data };
+      return { success: true, data: normalizePurchase(data) };
     } catch (error) {
       console.warn('Failed to update purchase via API:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };

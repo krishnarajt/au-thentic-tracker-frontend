@@ -32,7 +32,8 @@ const PurchasesTab = ({
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [editingPurchase, setEditingPurchase] = useState<GoldPurchase | null>(null);
-  const [editForm, setEditForm] = useState({ grams: '', amountPaid: '', date: '', pricePerGram: '' });
+  const [editForm, setEditForm] = useState({ grams: '', amountPaid: '', date: '', pricePerGram: '', description: '' });
+  const [descriptionDrafts, setDescriptionDrafts] = useState<Record<string, string>>({});
   const [isImporting, setIsImporting] = useState(false);
   const currentBasePrice = toBasePrice(currentGoldPrice);
   const lastMonthBasePrice = toBasePrice(lastMonthGoldPrice);
@@ -92,6 +93,7 @@ const PurchasesTab = ({
       amountPaid: String(purchase.amountPaid),
       date: purchase.date,
       pricePerGram: String(purchase.pricePerGram),
+      description: purchase.description ?? '',
     });
   };
 
@@ -101,14 +103,41 @@ const PurchasesTab = ({
     const amountPaid = parseFloat(editForm.amountPaid);
     const pricePerGram = parseFloat(editForm.pricePerGram);
     if (isNaN(grams) || isNaN(amountPaid) || isNaN(pricePerGram) || !editForm.date) return;
-    updatePurchase(editingPurchase.id, { grams, amountPaid, date: editForm.date, pricePerGram });
+    updatePurchase(editingPurchase.id, { grams, amountPaid, date: editForm.date, pricePerGram, description: editForm.description.trim() });
     setEditingPurchase(null);
   };
 
+  const saveDescription = (purchase: GoldPurchase) => {
+    const draft = descriptionDrafts[purchase.id];
+    if (draft === undefined) return;
+
+    const nextDescription = draft.trim();
+    if (nextDescription === (purchase.description ?? '')) {
+      setDescriptionDrafts(prev => {
+        const { [purchase.id]: _, ...rest } = prev;
+        return rest;
+      });
+      return;
+    }
+
+    updatePurchase(purchase.id, { description: nextDescription });
+    setDescriptionDrafts(prev => {
+      const { [purchase.id]: _, ...rest } = prev;
+      return rest;
+    });
+  };
+
   const exportCsv = () => {
-    const header = 'date,grams,amountPaid,pricePerGram';
+    const sanitizeCsvValue = (value: string | number) => String(value).replace(/[\r\n,]+/g, ' ').trim();
+    const header = 'date,grams,amountPaid,pricePerGram,description';
     const rows = purchases.map(p =>
-      `${p.date},${p.grams},${p.amountPaid},${p.pricePerGram}`
+      [
+        sanitizeCsvValue(p.date),
+        sanitizeCsvValue(p.grams),
+        sanitizeCsvValue(p.amountPaid),
+        sanitizeCsvValue(p.pricePerGram),
+        sanitizeCsvValue(p.description ?? ''),
+      ].join(',')
     );
     const csv = [header, ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -135,6 +164,7 @@ const PurchasesTab = ({
       const gramsIdx = header.indexOf('grams');
       const amountPaidIdx = header.indexOf('amountPaid');
       const pricePerGramIdx = header.indexOf('pricePerGram');
+      const descriptionIdx = header.indexOf('description');
 
       if (dateIdx === -1 || gramsIdx === -1 || amountPaidIdx === -1 || pricePerGramIdx === -1) {
         setIsImporting(false);
@@ -148,8 +178,9 @@ const PurchasesTab = ({
           const amountPaid = parseFloat(cols[amountPaidIdx]);
           const pricePerGram = parseFloat(cols[pricePerGramIdx]);
           const date = cols[dateIdx];
+          const description = descriptionIdx >= 0 ? (cols[descriptionIdx] ?? '') : '';
           if (isNaN(grams) || isNaN(amountPaid) || isNaN(pricePerGram) || !date) return null;
-          return { grams, amountPaid, date, pricePerGram };
+          return { grams, amountPaid, date, pricePerGram, description };
         })
         .filter((p): p is Omit<GoldPurchase, 'id'> => p !== null);
 
@@ -283,7 +314,7 @@ const PurchasesTab = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Grams</label>
               <Input
@@ -301,6 +332,15 @@ const PurchasesTab = ({
                 type="date"
                 value={newPurchase.date}
                 onChange={(e) => setNewPurchase({...newPurchase, date: e.target.value})}
+                className="mt-1.5 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20 transition-all"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Description</label>
+              <Input
+                value={newPurchase.description}
+                onChange={(e) => setNewPurchase({...newPurchase, description: e.target.value})}
+                placeholder="Optional note"
                 className="mt-1.5 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20 transition-all"
               />
             </div>
@@ -389,6 +429,7 @@ const PurchasesTab = ({
                       <TableHead><SortButton field="grams" label="Grams" /></TableHead>
                       <TableHead><SortButton field="amountPaid" label="Amount Paid" /></TableHead>
                       <TableHead><SortButton field="pricePerGram" label="Price/Gram" /></TableHead>
+                      <TableHead>Description</TableHead>
                       <TableHead><SortButton field="currentValue" label="Current Value" /></TableHead>
                       <TableHead><SortButton field="return" label="Return" /></TableHead>
                       <TableHead className="w-10"></TableHead>
@@ -415,6 +456,20 @@ const PurchasesTab = ({
                             <div className="text-xs text-muted-foreground/80">
                               Base: {formatCurrency(toBasePrice(purchase.pricePerGram))}
                             </div>
+                          </TableCell>
+                          <TableCell className="min-w-52">
+                            <Input
+                              value={descriptionDrafts[purchase.id] ?? purchase.description ?? ''}
+                              onChange={(e) => setDescriptionDrafts(prev => ({ ...prev, [purchase.id]: e.target.value }))}
+                              onBlur={() => saveDescription(purchase)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.currentTarget.blur();
+                                }
+                              }}
+                              placeholder="Optional description"
+                              className="h-8 bg-background/50 border-gold/10 focus:border-gold/30 focus:ring-gold/20"
+                            />
                           </TableCell>
                           <TableCell className="font-medium text-sm">{formatCurrency(cv)}</TableCell>
                           <TableCell>
@@ -511,6 +566,15 @@ const PurchasesTab = ({
               <div className="mt-1.5 text-xs text-muted-foreground">
                 Base price: <span className="text-gold/70 font-medium">{formatCurrency(editBasePrice)}/g</span>
               </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Description</label>
+              <Input
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                placeholder="Optional note"
+                className="mt-1.5 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20"
+              />
             </div>
           </div>
           <DialogFooter className="gap-2">

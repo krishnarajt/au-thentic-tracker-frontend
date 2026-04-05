@@ -19,7 +19,8 @@ const GoldTracker = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [newPurchase, setNewPurchase] = useState({
     grams: "",
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    description: "",
   });
   const { toast } = useToast();
 
@@ -95,7 +96,7 @@ const GoldTracker = () => {
     }
 
     const amountPaid = grams * pricePerGram;
-    const purchaseData = { grams, amountPaid, date: newPurchase.date, pricePerGram };
+    const purchaseData = { grams, amountPaid, date: newPurchase.date, pricePerGram, description: newPurchase.description.trim() };
     const result = await goldPurchaseApi.create(purchaseData);
 
     let purchase: GoldPurchase;
@@ -108,7 +109,7 @@ const GoldTracker = () => {
     }
 
     setPurchases([...purchases, purchase]);
-    setNewPurchase({ grams: "", date: new Date().toISOString().split('T')[0] });
+    setNewPurchase({ grams: "", date: new Date().toISOString().split('T')[0], description: "" });
   };
 
   const removePurchase = async (id: string) => {
@@ -126,7 +127,7 @@ const GoldTracker = () => {
       setPurchases(purchases.map(p => p.id === id ? result.data! : p));
       toast({ title: "Purchase Updated", description: "Gold purchase updated on server" });
     } else {
-      setPurchases(purchases.map(p => p.id === id ? { ...p, ...updated } : p));
+      setPurchases(purchases.map(p => p.id === id ? { ...p, ...updated, description: updated.description ?? p.description ?? '' } : p));
       toast({ title: "Purchase Updated Locally", description: "Gold purchase updated (server unavailable)" });
     }
   };
