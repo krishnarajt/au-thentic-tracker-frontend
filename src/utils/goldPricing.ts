@@ -1,3 +1,5 @@
+import { roundToDecimals } from "@/utils/numbers";
+
 export const GOLD_TAX_RATE = 0.05;
 export const GOLD_TAX_MULTIPLIER = 1 + GOLD_TAX_RATE;
 
@@ -6,7 +8,7 @@ export const toTaxInclusivePrice = (basePrice: number): number => {
     return 0;
   }
 
-  return basePrice * GOLD_TAX_MULTIPLIER;
+  return roundToDecimals(basePrice * GOLD_TAX_MULTIPLIER);
 };
 
 export const toBasePrice = (taxInclusivePrice: number): number => {
@@ -14,5 +16,5 @@ export const toBasePrice = (taxInclusivePrice: number): number => {
     return 0;
   }
 
-  return taxInclusivePrice / GOLD_TAX_MULTIPLIER;
+  return roundToDecimals(taxInclusivePrice / GOLD_TAX_MULTIPLIER);
 };

@@ -1,21 +1,24 @@
+import { formatNumber } from "@/utils/numbers";
+
+const RUPEE_SYMBOL = "\u20b9";
+
 export const formatCurrency = (amount: number): string => {
-  const sign = amount < 0 ? '-' : '';
+  const sign = amount < 0 ? "-" : "";
   const abs = Math.abs(amount);
 
   if (abs >= 10000000) {
-    return `${sign}₹${(abs / 10000000).toFixed(2)}Cr`;
-  } else if (abs >= 100000) {
-    return `${sign}₹${(abs / 100000).toFixed(2)}L`;
-  } else if (abs >= 1000) {
-    return `${sign}₹${(abs / 1000).toFixed(1)}K`;
+    return `${sign}${RUPEE_SYMBOL}${formatNumber(abs / 10000000)}Cr`;
   }
-  return `${sign}₹${abs.toFixed(2)}`;
+  if (abs >= 100000) {
+    return `${sign}${RUPEE_SYMBOL}${formatNumber(abs / 100000)}L`;
+  }
+  if (abs >= 1000) {
+    return `${sign}${RUPEE_SYMBOL}${formatNumber(abs / 1000)}K`;
+  }
+
+  return `${sign}${RUPEE_SYMBOL}${formatNumber(abs)}`;
 };
 
-export const formatWeight = (grams: number): string => {
-  return `${grams.toFixed(2)}g`;
-};
+export const formatWeight = (grams: number): string => `${formatNumber(grams)}g`;
 
-export const formatPercentage = (percentage: number): string => {
-  return `${percentage.toFixed(1)}%`;
-};
+export const formatPercentage = (percentage: number): string => `${formatNumber(percentage)}%`;

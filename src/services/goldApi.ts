@@ -1,5 +1,6 @@
 
 import { GoldPurchase } from '@/types/gold';
+import { roundToDecimals } from '@/utils/numbers';
 
 // Configuration - update these URLs to point to your NAS backend
 const API_BASE_URL = 'https://api-get-away.krishnarajthadesar.in/api/authentic-tracker';
@@ -28,18 +29,31 @@ const saveGuestPurchases = (purchases: GoldPurchase[]) => {
 
 const normalizePurchase = (purchase: GoldPurchase): GoldPurchase => ({
   ...purchase,
+  grams: roundToDecimals(purchase.grams),
+  amountPaid: roundToDecimals(purchase.amountPaid),
+  pricePerGram: roundToDecimals(purchase.pricePerGram),
   description: purchase.description ?? '',
 });
 
-const normalizePurchaseInput = <T extends Partial<GoldPurchase>>(purchase: T): T & { description: string } => ({
-  ...purchase,
-  description: purchase.description ?? '',
-});
+const normalizePurchaseInput = <T extends Partial<GoldPurchase>>(purchase: T): T & { description: string } => {
+  const normalized = {
+    ...purchase,
+    description: purchase.description ?? '',
+  } as T & { description: string };
+
+  if (typeof normalized.grams === 'number') normalized.grams = roundToDecimals(normalized.grams);
+  if (typeof normalized.amountPaid === 'number') normalized.amountPaid = roundToDecimals(normalized.amountPaid);
+  if (typeof normalized.pricePerGram === 'number') normalized.pricePerGram = roundToDecimals(normalized.pricePerGram);
+
+  return normalized;
+};
 
 const normalizePurchasePatch = (purchase: Partial<GoldPurchase>): Partial<GoldPurchase> => (
-  'description' in purchase
-    ? { ...purchase, description: purchase.description ?? '' }
-    : purchase
+  normalizePurchaseInput(
+    'description' in purchase
+      ? { ...purchase, description: purchase.description ?? '' }
+      : purchase
+  )
 );
 
 export interface ApiResponse<T> {
@@ -192,7 +206,7 @@ export const goldPriceApi = {
 
       if (response.ok) {
         const data = await response.json();
-        return { success: true, data: data.pricePerGram };
+        return { success: true, data: roundToDecimals(data.pricePerGram) };
       }
 
       return { success: false, error: `HTTP error! status: ${response.status}` };
@@ -220,7 +234,7 @@ export const goldPriceApi = {
 
         if (response.ok) {
           const data = await response.json();
-          return { success: true, data: data.pricePerGram };
+          return { success: true, data: roundToDecimals(data.pricePerGram) };
         }
       } catch (error) {
         console.warn('Custom historical gold price API failed:', error);
@@ -248,7 +262,7 @@ export const goldPriceApi = {
 
         if (response.ok) {
           const data = await response.json();
-          return { success: true, data: data.pricePerGram };
+          return { success: true, data: roundToDecimals(data.pricePerGram) };
         }
       } catch (error) {
         console.warn('Custom historical gold price API failed for date:', date, error);
