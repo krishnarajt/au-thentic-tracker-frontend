@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Coins, Wallet, TrendingUp, TrendingDown, IndianRupeeIcon } from "lucide-react";
 import { formatCurrency, formatWeight, formatPercentage } from "@/utils/formatters";
+import { toBasePrice } from "@/utils/goldPricing";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from "recharts";
 import { DashboardTabProps } from "./types";
 
@@ -24,6 +25,8 @@ const DashboardTab = ({
   returnPercentage,
   totalXIRR,
 }: DashboardTabProps) => {
+  const currentBasePrice = toBasePrice(currentGoldPrice);
+
   const monthlyInvestmentData = useMemo(() => {
     const map = new Map<string, { month: string; invested: number; grams: number }>();
     purchases.forEach(p => {
@@ -102,7 +105,10 @@ const DashboardTab = ({
           <CardContent className="relative">
             <div className="text-2xl font-bold text-gold font-playfair">{formatCurrency(currentValue)}</div>
             <div className="text-xs text-muted-foreground mt-1">
-              @ {formatCurrency(currentGoldPrice)}/g
+              @ {formatCurrency(currentGoldPrice)}/g incl. tax
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Base: {formatCurrency(currentBasePrice)}/g
             </div>
           </CardContent>
         </Card>

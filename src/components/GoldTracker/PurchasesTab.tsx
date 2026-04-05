@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Pencil, TrendingUp, TrendingDown, RefreshCw, ChevronUp, ChevronDown, ChevronsUpDown, Coins, Download, Upload } from "lucide-react";
 import { formatCurrency, formatWeight, formatPercentage } from "@/utils/formatters";
+import { toBasePrice } from "@/utils/goldPricing";
 import { GoldPurchase } from "@/types/gold";
 import { PurchasesTabProps, SortField, SortDirection } from "./types";
 
@@ -33,6 +34,9 @@ const PurchasesTab = ({
   const [editingPurchase, setEditingPurchase] = useState<GoldPurchase | null>(null);
   const [editForm, setEditForm] = useState({ grams: '', amountPaid: '', date: '', pricePerGram: '' });
   const [isImporting, setIsImporting] = useState(false);
+  const currentBasePrice = toBasePrice(currentGoldPrice);
+  const lastMonthBasePrice = toBasePrice(lastMonthGoldPrice);
+  const editBasePrice = toBasePrice(parseFloat(editForm.pricePerGram) || 0);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -189,7 +193,7 @@ const PurchasesTab = ({
           <CardContent>
             <div className="flex gap-3 items-end">
               <div className="flex-1">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price per gram</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price per gram (incl. 5% tax)</label>
                 <div className="relative mt-1.5">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
                   <Input
@@ -213,8 +217,13 @@ const PurchasesTab = ({
                 {isLoadingPrice ? 'Fetching...' : 'Fetch'}
               </Button>
             </div>
-            <div className="text-xs text-muted-foreground mt-2.5 flex items-center gap-1">
-              Your average: <span className="text-gold/70 font-medium">{formatCurrency(averagePricePerGram)}/g</span>
+            <div className="text-xs text-muted-foreground mt-2.5 space-y-1">
+              <div className="flex items-center gap-1">
+                Your average: <span className="text-gold/70 font-medium">{formatCurrency(averagePricePerGram)}/g</span>
+              </div>
+              <div>
+                Base API price: <span className="text-gold/70 font-medium">{formatCurrency(currentBasePrice)}/g</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -230,7 +239,7 @@ const PurchasesTab = ({
           <CardContent>
             <div className="flex gap-3 items-end">
               <div className="flex-1">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price per gram</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price per gram (incl. 5% tax)</label>
                 <div className="relative mt-1.5">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
                   <Input
@@ -254,8 +263,11 @@ const PurchasesTab = ({
                 {isLoadingHistoricalPrice ? 'Fetching...' : 'Fetch'}
               </Button>
             </div>
-            <div className="text-xs text-muted-foreground mt-2.5">
-              Used for 30-day return calculations
+            <div className="text-xs text-muted-foreground mt-2.5 space-y-1">
+              <div>Used for 30-day return calculations</div>
+              <div>
+                Base API price: <span className="text-gold/70 font-medium">{formatCurrency(lastMonthBasePrice)}/g</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -398,7 +410,12 @@ const PurchasesTab = ({
                           </TableCell>
                           <TableCell className="font-medium text-gold/90">{formatWeight(purchase.grams)}</TableCell>
                           <TableCell className="text-sm">{formatCurrency(purchase.amountPaid)}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{formatCurrency(purchase.pricePerGram)}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            <div className="font-medium text-foreground">{formatCurrency(purchase.pricePerGram)}</div>
+                            <div className="text-xs text-muted-foreground/80">
+                              Base: {formatCurrency(toBasePrice(purchase.pricePerGram))}
+                            </div>
+                          </TableCell>
                           <TableCell className="font-medium text-sm">{formatCurrency(cv)}</TableCell>
                           <TableCell>
                             <div className={`flex items-center gap-1.5 text-sm font-medium ${returnAmount >= 0 ? 'text-success' : 'text-destructive'}`}>
@@ -480,7 +497,7 @@ const PurchasesTab = ({
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price per Gram</label>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price per Gram (incl. 5% tax)</label>
               <div className="relative mt-1.5">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
                 <Input
@@ -490,6 +507,9 @@ const PurchasesTab = ({
                   onChange={(e) => setEditForm({ ...editForm, pricePerGram: e.target.value })}
                   className="pl-7 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20"
                 />
+              </div>
+              <div className="mt-1.5 text-xs text-muted-foreground">
+                Base price: <span className="text-gold/70 font-medium">{formatCurrency(editBasePrice)}/g</span>
               </div>
             </div>
           </div>

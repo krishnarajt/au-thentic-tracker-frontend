@@ -4,6 +4,7 @@ import { Sparkles, LayoutDashboard, ShoppingCart, LineChartIcon } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { goldPurchaseApi, goldPriceApi } from "@/services/goldApi";
 import { GoldPurchase } from "@/types/gold";
+import { toTaxInclusivePrice } from "@/utils/goldPricing";
 import { calculateGoldXIRR } from "@/utils/xirr";
 import DashboardTab from "./DashboardTab";
 import PurchasesTab from "./PurchasesTab";
@@ -46,9 +47,10 @@ const GoldTracker = () => {
     setIsLoadingPrice(true);
     const result = await goldPriceApi.getCurrentPrice();
     if (result.success && result.data) {
-      setCurrentGoldPrice(result.data);
+      const taxedPrice = toTaxInclusivePrice(result.data);
+      setCurrentGoldPrice(taxedPrice);
       if (showToast) {
-        toast({ title: "Price Updated", description: `Current gold price: ₹${result.data.toFixed(2)}/g` });
+        toast({ title: "Price Updated", description: `Current gold price: ₹${taxedPrice.toFixed(2)}/g` });
       }
     } else if (showToast) {
       toast({ title: "Price Fetch Failed", description: "Using manual price input", variant: "destructive" });
@@ -60,9 +62,10 @@ const GoldTracker = () => {
     setIsLoadingHistoricalPrice(true);
     const result = await goldPriceApi.getHistoricalPrice(30);
     if (result.success && result.data) {
-      setLastMonthGoldPrice(result.data);
+      const taxedPrice = toTaxInclusivePrice(result.data);
+      setLastMonthGoldPrice(taxedPrice);
       if (showToast) {
-        toast({ title: "Historical Price Updated", description: `30-day old gold price: ₹${result.data.toFixed(2)}/g` });
+        toast({ title: "Historical Price Updated", description: `30-day old gold price: ₹${taxedPrice.toFixed(2)}/g` });
       }
     } else if (showToast) {
       toast({ title: "Historical Price Fetch Failed", description: "Please enter manually", variant: "destructive" });
@@ -84,7 +87,7 @@ const GoldTracker = () => {
     let pricePerGram = currentGoldPrice;
     const priceResult = await goldPriceApi.getPriceAtDate(newPurchase.date);
     if (priceResult.success && priceResult.data) {
-      pricePerGram = priceResult.data;
+      pricePerGram = toTaxInclusivePrice(priceResult.data);
     }
     if (pricePerGram <= 0) {
       toast({ title: "Missing Price", description: "Please enter the current gold price before adding a purchase.", variant: "destructive" });
