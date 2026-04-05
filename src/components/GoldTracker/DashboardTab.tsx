@@ -63,7 +63,7 @@ const DashboardTab = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold text-gold-shimmer font-playfair">{formatWeight(totalGrams)}</div>
+            <div className="numeric-readable text-3xl font-bold text-gold-shimmer font-inter tracking-tight">{formatWeight(totalGrams)}</div>
             <div className="text-xs text-muted-foreground mt-1">
               {purchases.length} purchase{purchases.length !== 1 ? 's' : ''}
             </div>
@@ -83,7 +83,7 @@ const DashboardTab = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-2xl font-bold text-foreground font-playfair">{formatCurrency(totalInvested)}</div>
+            <div className="numeric-readable text-2xl font-bold text-foreground font-inter tracking-tight">{formatCurrency(totalInvested)}</div>
             <div className="text-xs text-muted-foreground mt-1">
               Avg: {formatCurrency(averagePricePerGram)}/g
             </div>
@@ -103,7 +103,7 @@ const DashboardTab = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-2xl font-bold text-gold font-playfair">{formatCurrency(currentValue)}</div>
+            <div className="numeric-readable text-2xl font-bold text-gold font-inter tracking-tight">{formatCurrency(currentValue)}</div>
             <div className="text-xs text-muted-foreground mt-1">
               @ {formatCurrency(currentGoldPrice)}/g incl. tax
             </div>
@@ -126,7 +126,7 @@ const DashboardTab = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <div className={`text-2xl font-bold flex items-center gap-2 font-playfair ${totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
+            <div className={`numeric-readable text-2xl font-bold flex items-center gap-2 font-inter tracking-tight ${totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
               {formatCurrency(totalReturn)}
               <span className={`text-sm font-inter font-medium px-2 py-0.5 rounded-full ${totalReturn >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                 {formatPercentage(returnPercentage)}

@@ -14,7 +14,7 @@ const KpiCard = ({ icon: Icon, iconColor = "text-gold/80", bgColor = "bg-gold/10
       </CardTitle>
     </CardHeader>
     <CardContent className="relative">
-      <div className={`text-2xl font-bold font-playfair ${valueClass}`}>{value}</div>
+      <div className={`numeric-readable text-2xl font-bold font-inter tracking-tight ${valueClass}`}>{value}</div>
       {subtitle && <div className="text-xs text-muted-foreground mt-1">{subtitle}</div>}
     </CardContent>
   </Card>

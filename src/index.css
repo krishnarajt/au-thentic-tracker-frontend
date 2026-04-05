@@ -239,7 +239,8 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Manrope', sans-serif;
+    font-variant-numeric: lining-nums;
   }
 
   /* Custom scrollbar */
@@ -433,6 +434,11 @@
     );
     animation: rotate-shimmer 6s linear infinite;
     z-index: -1;
+  }
+
+  .numeric-readable {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
   }
 }
 

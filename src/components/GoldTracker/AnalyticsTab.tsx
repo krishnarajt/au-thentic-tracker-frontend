@@ -345,7 +345,7 @@ const AnalyticsTab = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-xl font-bold flex items-center gap-2 font-playfair ${monthlyReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
+            <div className={`numeric-readable text-xl font-bold flex items-center gap-2 font-inter tracking-tight ${monthlyReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
               {formatCurrency(monthlyReturn)}
               <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded-full ${monthlyReturn >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                 {formatPercentage(monthlyReturnPercentage)}
@@ -366,7 +366,7 @@ const AnalyticsTab = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-xl font-bold flex items-center gap-2 font-playfair ${returnSinceLastInvestment >= 0 ? 'text-success' : 'text-destructive'}`}>
+            <div className={`numeric-readable text-xl font-bold flex items-center gap-2 font-inter tracking-tight ${returnSinceLastInvestment >= 0 ? 'text-success' : 'text-destructive'}`}>
               {formatCurrency(returnSinceLastInvestment)}
               <span className={`text-xs font-inter font-medium px-2 py-0.5 rounded-full ${returnSinceLastInvestment >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                 {formatPercentage(returnSinceLastInvestmentPercentage)}
@@ -389,7 +389,7 @@ const AnalyticsTab = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold font-playfair ${totalXIRR >= 0 ? 'text-success' : 'text-destructive'}`}>
+            <div className={`numeric-readable text-3xl font-bold font-inter tracking-tight ${totalXIRR >= 0 ? 'text-success' : 'text-destructive'}`}>
               {formatPercentage(totalXIRR)}
             </div>
             <div className="text-xs text-muted-foreground mt-1.5">Annualized Return Rate</div>
