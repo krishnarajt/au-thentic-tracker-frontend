@@ -8,6 +8,7 @@ import {
   Layers, Timer, Award
 } from "lucide-react";
 import { formatCurrency, formatWeight, formatPercentage } from "@/utils/formatters";
+import { formatNumber } from "@/utils/numbers";
 import {
   XAxis, YAxis, ResponsiveContainer, Legend, Area, AreaChart, CartesianGrid,
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
@@ -399,11 +400,11 @@ const AnalyticsTab = ({
       {/* ── Advanced Statistical KPIs ── */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <KpiCard icon={Sigma} title="Std Deviation" value={formatCurrency(stats.stdDev)} valueClass="text-foreground" subtitle={`CV: ${stats.cv.toFixed(1)}%`} />
-          <KpiCard icon={Activity} title="Z-Score" value={stats.zScore.toFixed(2)} valueClass={stats.zScore > 1 ? 'text-success' : stats.zScore < -1 ? 'text-destructive' : 'text-gold'} subtitle={stats.zScore > 1 ? "Price above normal" : stats.zScore < -1 ? "Price below normal" : "Price in range"} />
-          <KpiCard icon={Zap} title="DCA Efficiency" value={`${stats.dcaEfficiency > 0 ? '+' : ''}${stats.dcaEfficiency.toFixed(1)}%`} valueClass={stats.dcaEfficiency >= 0 ? 'text-success' : 'text-destructive'} subtitle={stats.dcaEfficiency >= 0 ? "Beating simple avg" : "Below simple avg"} />
-          <KpiCard icon={ShieldCheck} title="Sharpe-like" value={stats.sharpe.toFixed(2)} valueClass={stats.sharpe > 1 ? 'text-success' : stats.sharpe > 0 ? 'text-gold' : 'text-destructive'} subtitle="Return / Volatility" />
-          <KpiCard icon={Percent} title="Gini Coeff" value={stats.gini.toFixed(3)} valueClass="text-foreground" subtitle={stats.gini < 0.3 ? "Even distribution" : stats.gini < 0.5 ? "Moderate spread" : "Concentrated"} />
+          <KpiCard icon={Sigma} title="Std Deviation" value={formatCurrency(stats.stdDev)} valueClass="text-foreground" subtitle={`CV: ${formatNumber(stats.cv)}%`} />
+          <KpiCard icon={Activity} title="Z-Score" value={formatNumber(stats.zScore)} valueClass={stats.zScore > 1 ? 'text-success' : stats.zScore < -1 ? 'text-destructive' : 'text-gold'} subtitle={stats.zScore > 1 ? "Price above normal" : stats.zScore < -1 ? "Price below normal" : "Price in range"} />
+          <KpiCard icon={Zap} title="DCA Efficiency" value={`${stats.dcaEfficiency > 0 ? '+' : ''}${formatNumber(stats.dcaEfficiency)}%`} valueClass={stats.dcaEfficiency >= 0 ? 'text-success' : 'text-destructive'} subtitle={stats.dcaEfficiency >= 0 ? "Beating simple avg" : "Below simple avg"} />
+          <KpiCard icon={ShieldCheck} title="Sharpe-like" value={formatNumber(stats.sharpe)} valueClass={stats.sharpe > 1 ? 'text-success' : stats.sharpe > 0 ? 'text-gold' : 'text-destructive'} subtitle="Return / Volatility" />
+          <KpiCard icon={Percent} title="Gini Coeff" value={formatNumber(stats.gini)} valueClass="text-foreground" subtitle={stats.gini < 0.3 ? "Even distribution" : stats.gini < 0.5 ? "Moderate spread" : "Concentrated"} />
           <KpiCard icon={Flame} title="Max Streak" value={`${stats.maxStreak} mo`} valueClass="text-gold" subtitle="Consecutive months" />
         </div>
       )}
@@ -411,12 +412,12 @@ const AnalyticsTab = ({
       {/* ── Row 2: More Stats ── */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <KpiCard icon={Brain} title="Skewness" value={stats.skewness.toFixed(2)} valueClass="text-foreground" subtitle={stats.skewness > 0.5 ? "Right-skewed" : stats.skewness < -0.5 ? "Left-skewed" : "Symmetric"} />
-          <KpiCard icon={Layers} title="Kurtosis" value={stats.kurtosis.toFixed(2)} valueClass="text-foreground" subtitle={stats.kurtosis > 1 ? "Heavy tails" : stats.kurtosis < -1 ? "Light tails" : "Normal tails"} />
+          <KpiCard icon={Brain} title="Skewness" value={formatNumber(stats.skewness)} valueClass="text-foreground" subtitle={stats.skewness > 0.5 ? "Right-skewed" : stats.skewness < -0.5 ? "Left-skewed" : "Symmetric"} />
+          <KpiCard icon={Layers} title="Kurtosis" value={formatNumber(stats.kurtosis)} valueClass="text-foreground" subtitle={stats.kurtosis > 1 ? "Heavy tails" : stats.kurtosis < -1 ? "Light tails" : "Normal tails"} />
           <KpiCard icon={GaugeCircle} title="Median Price" value={formatCurrency(stats.median)} valueClass="text-foreground" subtitle={`IQR: ${formatCurrency(stats.iqr)}`} />
-          <KpiCard icon={Timer} title="Velocity" value={`${stats.velocity.toFixed(1)}/mo`} valueClass="text-gold" subtitle="Purchase frequency" />
-          <KpiCard icon={Award} title="Below Avg Buys" value={`${stats.belowAvg}/${purchases.length}`} valueClass="text-success" subtitle={`${((stats.belowAvg / purchases.length) * 100).toFixed(0)}% were bargains`} />
-          <KpiCard icon={PieChartIcon} title="HHI" value={stats.hhi.toFixed(3)} valueClass="text-foreground" subtitle={stats.hhi < 0.15 ? "Well diversified" : stats.hhi < 0.25 ? "Moderate" : "Concentrated"} />
+          <KpiCard icon={Timer} title="Velocity" value={`${formatNumber(stats.velocity)}/mo`} valueClass="text-gold" subtitle="Purchase frequency" />
+          <KpiCard icon={Award} title="Below Avg Buys" value={`${stats.belowAvg}/${purchases.length}`} valueClass="text-success" subtitle={`${formatNumber((stats.belowAvg / purchases.length) * 100)}% were bargains`} />
+          <KpiCard icon={PieChartIcon} title="HHI" value={formatNumber(stats.hhi)} valueClass="text-foreground" subtitle={stats.hhi < 0.15 ? "Well diversified" : stats.hhi < 0.25 ? "Moderate" : "Concentrated"} />
         </div>
       )}
 
@@ -454,7 +455,7 @@ const AnalyticsTab = ({
                     <PolarAngleAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
                     <Radar name="Score" dataKey="value" stroke="hsl(45, 90%, 55%)" fill="hsl(45, 90%, 55%)" fillOpacity={0.25} strokeWidth={2} />
-                    <Tooltip formatter={(value: number) => [`${value}/100`, "Score"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                    <Tooltip formatter={(value: number) => [`${formatNumber(value)}/100`, "Score"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
                   </RadarChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -476,12 +477,12 @@ const AnalyticsTab = ({
               <ResponsiveContainer width="100%" height="100%">
                 <RadialBarChart innerRadius="60%" outerRadius="90%" data={returnGaugeData} startAngle={180} endAngle={0} barSize={20}>
                   <RadialBar dataKey="value" cornerRadius={10} background={{ fill: "hsl(var(--muted))" }} />
-                  <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, "Return"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                  <Tooltip formatter={(value: number) => [`${formatNumber(value)}%`, "Return"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
                 </RadialBarChart>
               </ResponsiveContainer>
             </ChartContainer>
             <div className={`text-2xl font-bold font-playfair -mt-8 ${totalReturn >= 0 ? 'text-success' : 'text-destructive'}`}>
-              {stats ? `${stats.returnPct.toFixed(1)}%` : '0%'}
+              {stats ? `${formatNumber(stats.returnPct)}%` : '0%'}
             </div>
             <div className="text-xs text-muted-foreground mt-1">Total Portfolio Return</div>
           </CardContent>
@@ -603,7 +604,7 @@ const AnalyticsTab = ({
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.1} />
                     <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short' })} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis tickFormatter={(v) => `${v}g`} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis tickFormatter={(v) => `${formatNumber(v)}g`} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
                     <Tooltip formatter={(value: number) => [formatWeight(value), "Total Gold"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} labelFormatter={(v) => new Date(v).toLocaleDateString()} />
                     <Area type="stepAfter" dataKey="grams" stroke="hsl(45, 90%, 55%)" strokeWidth={2} fill="url(#gramsGradient)" dot={{ fill: "hsl(45, 90%, 55%)", strokeWidth: 0, r: 3 }} />
                   </AreaChart>
@@ -635,9 +636,9 @@ const AnalyticsTab = ({
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.1} />
                     <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short' })} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis tickFormatter={(v) => `${v.toFixed(0)}%`} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis tickFormatter={(v) => `${formatNumber(v)}%`} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
                     <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" opacity={0.5} />
-                    <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, "Return"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} labelFormatter={(v) => new Date(v).toLocaleDateString()} />
+                    <Tooltip formatter={(value: number) => [`${formatNumber(value)}%`, "Return"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} labelFormatter={(v) => new Date(v).toLocaleDateString()} />
                     <Area type="monotone" dataKey="returnPct" stroke="hsl(142, 70%, 45%)" strokeWidth={2} fill="url(#returnGradient)" dot={{ fill: "hsl(142, 70%, 45%)", strokeWidth: 0, r: 3 }} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -726,7 +727,7 @@ const AnalyticsTab = ({
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.1} />
                     <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
                     <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
-                    <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}g`} />
+                    <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${formatNumber(v)}g`} />
                     <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
                     <Legend wrapperStyle={{ fontSize: '11px' }} />
                     <Bar yAxisId="left" dataKey="count" fill="hsl(45, 90%, 55%)" fillOpacity={0.6} radius={[4, 4, 0, 0]} name="# Purchases" />
@@ -755,9 +756,9 @@ const AnalyticsTab = ({
                   <BarChart data={monthlyReturnsData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.1} />
                     <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis tickFormatter={(v) => `${v.toFixed(0)}%`} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis tickFormatter={(v) => `${formatNumber(v)}%`} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
                     <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" opacity={0.5} />
-                    <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, "Return"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                    <Tooltip formatter={(value: number) => [`${formatNumber(value)}%`, "Return"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
                     <Bar dataKey="return" radius={[4, 4, 0, 0]}>
                       {monthlyReturnsData.map((entry, i) => (
                         <Cell key={i} fill={entry.positive ? "hsl(142, 70%, 45%)" : "hsl(0, 70%, 50%)"} fillOpacity={0.7} />
@@ -787,7 +788,7 @@ const AnalyticsTab = ({
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.1} />
-                  <XAxis dataKey="grams" name="Grams" tickFormatter={(v) => `${v}g`} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="grams" name="Grams" tickFormatter={(v) => `${formatNumber(v)}g`} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis dataKey="amount" name="Amount" tickFormatter={(v) => formatCurrency(v)} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip cursor={{ strokeDasharray: '3 3' }} formatter={(value: number, name: string) => [name === "Grams" ? formatWeight(value) : formatCurrency(value), name]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
                   <Scatter data={scatterData} fill="hsl(45, 90%, 55%)" fillOpacity={0.8} strokeWidth={1} stroke="hsl(45, 90%, 65%)">

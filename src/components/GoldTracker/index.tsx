@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { goldPurchaseApi, goldPriceApi } from "@/services/goldApi";
 import { GoldPurchase } from "@/types/gold";
 import { toTaxInclusivePrice } from "@/utils/goldPricing";
+import { formatNumber, roundToDecimals } from "@/utils/numbers";
 import { calculateGoldXIRR } from "@/utils/xirr";
 import DashboardTab from "./DashboardTab";
 import PurchasesTab from "./PurchasesTab";
@@ -51,7 +52,7 @@ const GoldTracker = () => {
       const taxedPrice = toTaxInclusivePrice(result.data);
       setCurrentGoldPrice(taxedPrice);
       if (showToast) {
-        toast({ title: "Price Updated", description: `Current gold price: ₹${taxedPrice.toFixed(2)}/g` });
+        toast({ title: "Price Updated", description: `Current gold price: ₹${formatNumber(taxedPrice)}/g` });
       }
     } else if (showToast) {
       toast({ title: "Price Fetch Failed", description: "Using manual price input", variant: "destructive" });
@@ -66,7 +67,7 @@ const GoldTracker = () => {
       const taxedPrice = toTaxInclusivePrice(result.data);
       setLastMonthGoldPrice(taxedPrice);
       if (showToast) {
-        toast({ title: "Historical Price Updated", description: `30-day old gold price: ₹${taxedPrice.toFixed(2)}/g` });
+        toast({ title: "Historical Price Updated", description: `30-day old gold price: ₹${formatNumber(taxedPrice)}/g` });
       }
     } else if (showToast) {
       toast({ title: "Historical Price Fetch Failed", description: "Please enter manually", variant: "destructive" });
@@ -79,7 +80,7 @@ const GoldTracker = () => {
       toast({ title: "Missing Information", description: "Please fill in grams and date to add a purchase.", variant: "destructive" });
       return;
     }
-    const grams = parseFloat(newPurchase.grams);
+    const grams = roundToDecimals(parseFloat(newPurchase.grams));
     if (isNaN(grams) || grams <= 0) {
       toast({ title: "Invalid Values", description: "Grams must be a positive number.", variant: "destructive" });
       return;
@@ -95,17 +96,17 @@ const GoldTracker = () => {
       return;
     }
 
-    const amountPaid = grams * pricePerGram;
+    const amountPaid = roundToDecimals(grams * pricePerGram);
     const purchaseData = { grams, amountPaid, date: newPurchase.date, pricePerGram, description: newPurchase.description.trim() };
     const result = await goldPurchaseApi.create(purchaseData);
 
     let purchase: GoldPurchase;
     if (result.success && result.data) {
       purchase = result.data;
-      toast({ title: "Purchase Saved", description: `Added ${grams}g of gold at ₹${pricePerGram.toFixed(2)}/g (saved to server)` });
+      toast({ title: "Purchase Saved", description: `Added ${formatNumber(grams)}g of gold at ₹${formatNumber(pricePerGram)}/g (saved to server)` });
     } else {
       purchase = { id: Date.now().toString(), ...purchaseData };
-      toast({ title: "Purchase Added Locally", description: `Added ${grams}g of gold at ₹${pricePerGram.toFixed(2)}/g (server unavailable)` });
+      toast({ title: "Purchase Added Locally", description: `Added ${formatNumber(grams)}g of gold at ₹${formatNumber(pricePerGram)}/g (server unavailable)` });
     }
 
     setPurchases([...purchases, purchase]);
@@ -127,7 +128,14 @@ const GoldTracker = () => {
       setPurchases(purchases.map(p => p.id === id ? result.data! : p));
       toast({ title: "Purchase Updated", description: "Gold purchase updated on server" });
     } else {
-      setPurchases(purchases.map(p => p.id === id ? { ...p, ...updated, description: updated.description ?? p.description ?? '' } : p));
+      setPurchases(purchases.map(p => p.id === id ? {
+        ...p,
+        ...updated,
+        grams: typeof updated.grams === "number" ? roundToDecimals(updated.grams) : p.grams,
+        amountPaid: typeof updated.amountPaid === "number" ? roundToDecimals(updated.amountPaid) : p.amountPaid,
+        pricePerGram: typeof updated.pricePerGram === "number" ? roundToDecimals(updated.pricePerGram) : p.pricePerGram,
+        description: updated.description ?? p.description ?? '',
+      } : p));
       toast({ title: "Purchase Updated Locally", description: "Gold purchase updated (server unavailable)" });
     }
   };

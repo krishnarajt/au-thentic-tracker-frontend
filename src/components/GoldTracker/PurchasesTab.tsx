@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Plus, Trash2, Pencil, TrendingUp, TrendingDown, RefreshCw, ChevronUp, ChevronDown, ChevronsUpDown, Coins, Download, Upload } from "lucide-react";
 import { formatCurrency, formatWeight, formatPercentage } from "@/utils/formatters";
 import { toBasePrice } from "@/utils/goldPricing";
+import { roundToDecimals } from "@/utils/numbers";
 import { GoldPurchase } from "@/types/gold";
 import { PurchasesTabProps, SortField, SortDirection } from "./types";
 
@@ -99,9 +100,9 @@ const PurchasesTab = ({
 
   const saveEdit = () => {
     if (!editingPurchase) return;
-    const grams = parseFloat(editForm.grams);
-    const amountPaid = parseFloat(editForm.amountPaid);
-    const pricePerGram = parseFloat(editForm.pricePerGram);
+    const grams = roundToDecimals(parseFloat(editForm.grams));
+    const amountPaid = roundToDecimals(parseFloat(editForm.amountPaid));
+    const pricePerGram = roundToDecimals(parseFloat(editForm.pricePerGram));
     if (isNaN(grams) || isNaN(amountPaid) || isNaN(pricePerGram) || !editForm.date) return;
     updatePurchase(editingPurchase.id, { grams, amountPaid, date: editForm.date, pricePerGram, description: editForm.description.trim() });
     setEditingPurchase(null);
@@ -174,9 +175,9 @@ const PurchasesTab = ({
       const parsed = lines.slice(1)
         .map(line => {
           const cols = line.split(',').map(c => c.trim());
-          const grams = parseFloat(cols[gramsIdx]);
-          const amountPaid = parseFloat(cols[amountPaidIdx]);
-          const pricePerGram = parseFloat(cols[pricePerGramIdx]);
+          const grams = roundToDecimals(parseFloat(cols[gramsIdx]));
+          const amountPaid = roundToDecimals(parseFloat(cols[amountPaidIdx]));
+          const pricePerGram = roundToDecimals(parseFloat(cols[pricePerGramIdx]));
           const date = cols[dateIdx];
           const description = descriptionIdx >= 0 ? (cols[descriptionIdx] ?? '') : '';
           if (isNaN(grams) || isNaN(amountPaid) || isNaN(pricePerGram) || !date) return null;
@@ -229,9 +230,9 @@ const PurchasesTab = ({
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
                   <Input
                     type="number"
-                    step="0.01"
+                    step="0.001"
                     value={currentGoldPrice}
-                    onChange={(e) => setCurrentGoldPrice(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setCurrentGoldPrice(roundToDecimals(parseFloat(e.target.value) || 0))}
                     placeholder="Enter current gold price per gram"
                     className="pl-7 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20 transition-all"
                   />
@@ -275,9 +276,9 @@ const PurchasesTab = ({
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
                   <Input
                     type="number"
-                    step="0.01"
+                    step="0.001"
                     value={lastMonthGoldPrice}
-                    onChange={(e) => setLastMonthGoldPrice(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setLastMonthGoldPrice(roundToDecimals(parseFloat(e.target.value) || 0))}
                     placeholder="Enter gold price from 30 days ago"
                     className="pl-7 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20 transition-all"
                   />
@@ -319,7 +320,7 @@ const PurchasesTab = ({
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Grams</label>
               <Input
                 type="number"
-                step="0.01"
+                step="0.001"
                 value={newPurchase.grams}
                 onChange={(e) => setNewPurchase({...newPurchase, grams: e.target.value})}
                 placeholder="0.00"
@@ -523,7 +524,7 @@ const PurchasesTab = ({
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Grams</label>
               <Input
                 type="number"
-                step="0.01"
+                step="0.001"
                 value={editForm.grams}
                 onChange={(e) => setEditForm({ ...editForm, grams: e.target.value })}
                 className="mt-1.5 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20"
@@ -535,7 +536,7 @@ const PurchasesTab = ({
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
                 <Input
                   type="number"
-                  step="0.01"
+                  step="0.001"
                   value={editForm.amountPaid}
                   onChange={(e) => setEditForm({ ...editForm, amountPaid: e.target.value })}
                   className="pl-7 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20"
@@ -557,7 +558,7 @@ const PurchasesTab = ({
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gold/50 text-sm">₹</span>
                 <Input
                   type="number"
-                  step="0.01"
+                  step="0.001"
                   value={editForm.pricePerGram}
                   onChange={(e) => setEditForm({ ...editForm, pricePerGram: e.target.value })}
                   className="pl-7 bg-background/50 border-gold/15 focus:border-gold/40 focus:ring-gold/20"
